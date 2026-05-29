@@ -14,46 +14,49 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { CarModel, Motorization, CarOption, OptionCategory } from "@/types"
 import { cn } from "@/lib/utils"
 
-// ─── Step indicator ───────────────────────────────────────────────────────────
-const STEPS = ["Modello", "Motorizzazione", "Optional", "Riepilogo"]
+const STEPS = ["Modello", "Motore", "Optional", "Riepilogo"]
 
 function StepIndicator({ current }: { current: ConfiguratorStep }) {
   return (
-    <div className="flex items-center gap-0">
+    <div className="flex items-center">
       {STEPS.map((label, idx) => {
         const num = (idx + 1) as ConfiguratorStep
         const done = current > num
         const active = current === num
         return (
           <React.Fragment key={label}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <div
                 className={cn(
-                  "flex size-7 items-center justify-center rounded-full border-2 text-xs font-semibold transition-all",
-                  done && "border-primary bg-primary text-primary-foreground",
-                  active && "border-primary text-primary",
-                  !done && !active && "border-border text-muted-foreground"
+                  "flex size-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-200",
+                  done && "bg-primary text-primary-foreground shadow-sm shadow-primary/30",
+                  active && "bg-primary/10 border-2 border-primary text-primary",
+                  !done && !active && "bg-muted border-2 border-border text-muted-foreground"
                 )}
               >
                 {done ? <Check className="size-3.5" /> : num}
               </div>
               <span
                 className={cn(
-                  "hidden sm:inline text-sm font-medium",
-                  active ? "text-foreground" : "text-muted-foreground"
+                  "hidden sm:inline text-sm font-medium transition-colors",
+                  active ? "text-foreground" : done ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 {label}
               </span>
             </div>
             {idx < STEPS.length - 1 && (
-              <div className={cn("h-px flex-1 mx-3", current > num ? "bg-primary" : "bg-border")} />
+              <div
+                className={cn(
+                  "h-px flex-1 mx-3 transition-colors duration-300",
+                  current > num ? "bg-primary" : "bg-border"
+                )}
+              />
             )}
           </React.Fragment>
         )
@@ -62,12 +65,11 @@ function StepIndicator({ current }: { current: ConfiguratorStep }) {
   )
 }
 
-// ─── Price bar ────────────────────────────────────────────────────────────────
 function PriceBar() {
   const { totalPrice, selectedModel } = useConfigurator()
   if (!selectedModel) return null
   return (
-    <div className="sticky bottom-0 flex items-center justify-between border-t border-border bg-background/95 backdrop-blur px-4 py-3 sm:px-6">
+    <div className="sticky bottom-0 flex items-center justify-between rounded-xl border border-border bg-card/95 backdrop-blur shadow-lg px-5 py-3.5 mx-0">
       <div>
         <p className="text-xs text-muted-foreground">Prezzo totale configurazione</p>
         <p className="text-xl font-bold text-primary">{formatPrice(totalPrice)}</p>
@@ -76,14 +78,13 @@ function PriceBar() {
   )
 }
 
-// ─── Step 1: Modello ──────────────────────────────────────────────────────────
 function StepModel() {
   const { selectModel, selectedModel } = useConfigurator()
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <div>
         <h2 className="text-xl font-semibold">Scegli il modello</h2>
-        <p className="text-sm text-muted-foreground">Seleziona il modello di automobile che vuoi configurare</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Seleziona il modello di automobile che vuoi configurare</p>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {CAR_MODELS.map((model) => (
@@ -103,41 +104,40 @@ function ModelCard({ model, selected, onSelect }: { model: CarModel; selected: b
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all hover:shadow-md",
-        selected && "ring-2 ring-primary shadow-md"
+        "cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden",
+        selected && "ring-2 ring-primary shadow-md shadow-primary/15"
       )}
       onClick={() => onSelect(model)}
     >
       <CardContent className="p-0">
         <div
-          className="flex h-36 items-center justify-center rounded-t-xl"
-          style={{ background: `linear-gradient(135deg, ${model.imageColor}, ${model.imageColor}99)` }}
+          className="relative flex h-36 items-center justify-center"
+          style={{ background: `linear-gradient(145deg, ${model.imageColor}dd, ${model.imageColor}88)` }}
         >
-          <svg viewBox="0 0 200 80" className="w-40 fill-white/80">
+          <svg viewBox="0 0 200 80" className="w-40 fill-white/80 drop-shadow-sm">
             <path d="M160,50 L150,30 Q145,20 130,20 L70,20 Q55,20 50,30 L40,50 L30,50 Q25,50 25,55 L25,62 Q25,65 30,65 L35,65 Q35,72 42,72 Q49,72 49,65 L151,65 Q151,72 158,72 Q165,72 165,65 L170,65 Q175,65 175,62 L175,55 Q175,50 170,50 Z" />
           </svg>
+          {selected && (
+            <div className="absolute top-3 right-3 flex size-6 items-center justify-center rounded-full bg-primary shadow-sm">
+              <Check className="size-3.5 text-primary-foreground" />
+            </div>
+          )}
+          <div className="absolute bottom-2 left-3">
+            <Badge variant="outline" className="border-white/30 bg-black/20 text-white text-[10px] capitalize backdrop-blur-sm">
+              {model.category}
+            </Badge>
+          </div>
         </div>
         <div className="p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-bold">{model.brand} {model.name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{model.category}</p>
-            </div>
-            {selected && (
-              <div className="flex size-5 items-center justify-center rounded-full bg-primary">
-                <Check className="size-3 text-primary-foreground" />
-              </div>
-            )}
-          </div>
-          <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{model.description}</p>
-          <p className="mt-3 font-semibold text-primary">da {formatPrice(model.basePrice)}</p>
+          <p className="font-bold text-base">{model.brand} <span className="text-muted-foreground font-medium">{model.name}</span></p>
+          <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">{model.description}</p>
+          <p className="mt-3 font-bold text-primary">da {formatPrice(model.basePrice)}</p>
         </div>
       </CardContent>
     </Card>
   )
 }
 
-// ─── Step 2: Motorizzazione ───────────────────────────────────────────────────
 const FUEL_ICONS: Record<string, React.ReactNode> = {
   petrol: <Fuel className="size-4 text-amber-500" />,
   diesel: <Zap className="size-4 text-blue-500" />,
@@ -157,10 +157,10 @@ function StepMotorization() {
   const motorizations = MOTORIZATIONS.filter((m) => m.modelId === selectedModel?.id)
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <div>
         <h2 className="text-xl font-semibold">Scegli la motorizzazione</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mt-0.5">
           Motorizzazioni disponibili per {selectedModel?.brand} {selectedModel?.name}
         </p>
       </div>
@@ -188,13 +188,16 @@ function MotorizationCard({ mot, basePrice, selected, onSelect }: {
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all hover:shadow-md",
-        selected && "ring-2 ring-primary"
+        "cursor-pointer transition-all duration-200 hover:shadow-md",
+        selected && "ring-2 ring-primary shadow-sm shadow-primary/15"
       )}
       onClick={() => onSelect(mot)}
     >
       <CardContent className="flex items-center gap-4 p-4">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+        <div className={cn(
+          "flex size-11 shrink-0 items-center justify-center rounded-xl transition-colors",
+          selected ? "bg-primary/10" : "bg-muted"
+        )}>
           {FUEL_ICONS[mot.fuelType]}
         </div>
         <div className="flex-1 min-w-0">
@@ -205,7 +208,7 @@ function MotorizationCard({ mot, basePrice, selected, onSelect }: {
           <div className="mt-1.5 flex flex-wrap gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><Gauge className="size-3" />{mot.power} CV</span>
             <span>{mot.torque} Nm</span>
-            <span>0-100: {mot.acceleration}s</span>
+            <span>0–100: {mot.acceleration}s</span>
             <span>{mot.consumption}</span>
           </div>
         </div>
@@ -213,12 +216,12 @@ function MotorizationCard({ mot, basePrice, selected, onSelect }: {
           {mot.price === 0 ? (
             <p className="text-sm font-medium text-muted-foreground">Incluso</p>
           ) : (
-            <p className="text-sm font-semibold">+{formatPrice(mot.price)}</p>
+            <p className="text-sm font-semibold text-primary">+{formatPrice(mot.price)}</p>
           )}
           <p className="text-xs text-muted-foreground">{formatPrice(basePrice + mot.price)}</p>
         </div>
         {selected && (
-          <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary">
+          <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary shadow-sm">
             <Check className="size-3.5 text-primary-foreground" />
           </div>
         )}
@@ -227,7 +230,6 @@ function MotorizationCard({ mot, basePrice, selected, onSelect }: {
   )
 }
 
-// ─── Step 3: Optional ─────────────────────────────────────────────────────────
 const CATEGORY_LABELS: Record<OptionCategory, string> = {
   color: "Colore",
   interior: "Interni",
@@ -241,10 +243,10 @@ function StepOptions() {
   const categories: OptionCategory[] = ["color", "interior", "technology", "safety", "comfort"]
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <div>
         <h2 className="text-xl font-semibold">Scegli gli optional</h2>
-        <p className="text-sm text-muted-foreground">Personalizza la tua auto con accessori e optional</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Personalizza la tua auto con accessori e optional</p>
       </div>
       <Tabs defaultValue="color">
         <TabsList className="flex-wrap h-auto gap-1">
@@ -300,24 +302,24 @@ function OptionCard({ option, selected, compatible, onToggle }: {
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all",
-        selected && "ring-2 ring-primary",
+        "cursor-pointer transition-all duration-150",
+        selected && "ring-2 ring-primary shadow-sm shadow-primary/15",
         !compatible && "opacity-50 cursor-not-allowed"
       )}
       onClick={() => compatible && onToggle(option.id)}
     >
       <CardContent className="flex items-start gap-3 p-4">
-        {option.category === "color" && option.color && (
+        {option.category === "color" && option.color ? (
           <div
-            className="size-10 shrink-0 rounded-lg border border-border shadow-sm"
+            className="size-10 shrink-0 rounded-xl border border-border shadow-sm"
             style={{ backgroundColor: option.color }}
           />
-        )}
+        ) : null}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-sm font-medium leading-tight">{option.name}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{option.description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{option.description}</p>
               {!compatible && (
                 <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
                   <AlertTriangle className="size-3" /> Non compatibile
@@ -329,7 +331,7 @@ function OptionCard({ option, selected, compatible, onToggle }: {
                 {option.price === 0 ? "Incluso" : `+${formatPrice(option.price)}`}
               </p>
               {selected ? (
-                <div className="flex size-5 items-center justify-center rounded-full bg-primary">
+                <div className="flex size-5 items-center justify-center rounded-full bg-primary shadow-sm">
                   <Check className="size-3 text-primary-foreground" />
                 </div>
               ) : (
@@ -343,7 +345,6 @@ function OptionCard({ option, selected, compatible, onToggle }: {
   )
 }
 
-// ─── Step 4: Riepilogo ────────────────────────────────────────────────────────
 function StepSummary({ onSave }: { onSave: () => void }) {
   const { selectedModel, selectedMotorization, selectedOptionIds, configName, setConfigName, totalPrice, editingConfigId } = useConfigurator()
   const { register, handleSubmit, formState: { errors } } = useForm<ConfigurationNameFormData>({
@@ -367,45 +368,56 @@ function StepSummary({ onSave }: { onSave: () => void }) {
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-xl font-semibold">Riepilogo configurazione</h2>
-        <p className="text-sm text-muted-foreground">Rivedi la tua configurazione prima di salvarla</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Rivedi la tua configurazione prima di salvarla</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 flex flex-col gap-4">
-          {/* Model + Motorization */}
           <Card>
             <CardContent className="p-5">
-              <h3 className="text-sm font-semibold mb-3">Veicolo</h3>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs">Modello</p>
-                  <p className="font-medium">{selectedModel?.brand} {selectedModel?.name}</p>
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="size-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: `linear-gradient(135deg, ${selectedModel?.imageColor ?? "#666"}, ${selectedModel?.imageColor ?? "#666"}88)` }}
+                >
+                  <svg viewBox="0 0 200 80" className="w-7 fill-white/80">
+                    <path d="M160,50 L150,30 Q145,20 130,20 L70,20 Q55,20 50,30 L40,50 L30,50 Q25,50 25,55 L25,62 Q25,65 30,65 L35,65 Q35,72 42,72 Q49,72 49,65 L151,65 Q151,72 158,72 Q165,72 165,65 L170,65 Q175,65 175,62 L175,55 Q175,50 170,50 Z" />
+                  </svg>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">Categoria</p>
+                  <h3 className="text-sm font-semibold">Veicolo selezionato</h3>
+                  <p className="text-xs text-muted-foreground">{selectedModel?.brand} {selectedModel?.name}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <p className="text-muted-foreground text-xs mb-0.5">Categoria</p>
                   <p className="font-medium capitalize">{selectedModel?.category}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Motorizzazione</p>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <p className="text-muted-foreground text-xs mb-0.5">Motorizzazione</p>
                   <p className="font-medium">{selectedMotorization?.name}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Alimentazione</p>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <p className="text-muted-foreground text-xs mb-0.5">Alimentazione</p>
                   <p className="font-medium">{FUEL_LABELS[selectedMotorization?.fuelType ?? ""]}</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Potenza</p>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <p className="text-muted-foreground text-xs mb-0.5">Potenza</p>
                   <p className="font-medium">{selectedMotorization?.power} CV</p>
                 </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">0–100 km/h</p>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <p className="text-muted-foreground text-xs mb-0.5">0–100 km/h</p>
                   <p className="font-medium">{selectedMotorization?.acceleration}s</p>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <p className="text-muted-foreground text-xs mb-0.5">Consumo</p>
+                  <p className="font-medium">{selectedMotorization?.consumption}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Options */}
           {selectedOptions.length > 0 && (
             <Card>
               <CardContent className="p-5">
@@ -413,7 +425,9 @@ function StepSummary({ onSave }: { onSave: () => void }) {
                 <div className="flex flex-col gap-3">
                   {Object.entries(optionsByCategory).map(([cat, opts]) => (
                     <div key={cat}>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">{CATEGORY_LABELS[cat as OptionCategory]}</p>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+                        {CATEGORY_LABELS[cat as OptionCategory]}
+                      </p>
                       <div className="flex flex-col gap-1">
                         {opts.map((opt) => (
                           <div key={opt.id} className="flex items-center justify-between text-sm">
@@ -432,12 +446,12 @@ function StepSummary({ onSave }: { onSave: () => void }) {
             </Card>
           )}
 
-          {/* Name form */}
           <Card>
             <CardContent className="p-5">
+              <h3 className="text-sm font-semibold mb-3">Dai un nome alla configurazione</h3>
               <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="configName">Nome della configurazione</Label>
+                  <Label htmlFor="configName">Nome</Label>
                   <Input
                     id="configName"
                     placeholder="Es. BMW Sogno 2024"
@@ -447,7 +461,7 @@ function StepSummary({ onSave }: { onSave: () => void }) {
                   />
                   {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
                 </div>
-                <Button type="submit" className="w-full sm:w-auto" size="lg">
+                <Button type="submit" className="w-full sm:w-auto shadow-sm shadow-primary/20" size="lg">
                   {editingConfigId ? "Aggiorna configurazione" : "Salva configurazione"}
                 </Button>
               </form>
@@ -455,9 +469,9 @@ function StepSummary({ onSave }: { onSave: () => void }) {
           </Card>
         </div>
 
-        {/* Price breakdown */}
         <div>
-          <Card className="sticky top-4">
+          <Card className="sticky top-4 overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-primary to-primary/50" />
             <CardContent className="p-5">
               <h3 className="text-sm font-semibold mb-4">Dettaglio prezzi</h3>
               <div className="flex flex-col gap-2 text-sm">
@@ -479,7 +493,7 @@ function StepSummary({ onSave }: { onSave: () => void }) {
                     </div>
                   )
                 ))}
-                <div className="border-t border-border pt-2 mt-1 flex justify-between font-bold text-base">
+                <div className="border-t border-border pt-3 mt-1 flex justify-between font-bold text-base">
                   <span>Totale</span>
                   <span className="text-primary">{formatPrice(totalPrice)}</span>
                 </div>
@@ -492,10 +506,8 @@ function StepSummary({ onSave }: { onSave: () => void }) {
   )
 }
 
-// ─── Main Configurator ────────────────────────────────────────────────────────
 export function ConfiguratorPage() {
   const { id } = useParams()
-
   return (
     <ConfiguratorProvider>
       <ConfiguratorInnerWithLoad id={id} />
@@ -562,8 +574,10 @@ function InnerWizard() {
     <>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{ctx.editingConfigId ? "Modifica configurazione" : "Nuovo configuratore"}</h1>
-          <p className="text-sm text-muted-foreground">Passo {ctx.step} di 4</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {ctx.editingConfigId ? "Modifica configurazione" : "Nuovo configuratore"}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Passo {ctx.step} di 4</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => { ctx.reset(); navigate("/configurator") }}>
           <X className="size-4" />
@@ -571,7 +585,6 @@ function InnerWizard() {
         </Button>
       </div>
 
-      <Progress value={(ctx.step / 4) * 100} />
       <StepIndicator current={ctx.step} />
 
       {saved && (
@@ -587,7 +600,7 @@ function InnerWizard() {
       {ctx.step === 4 && <StepSummary onSave={handleSave} />}
 
       {ctx.step < 4 && (
-        <div className="flex justify-between">
+        <div className="flex justify-between pt-2">
           {ctx.step > 1 ? (
             <Button variant="outline" onClick={() => ctx.setStep((ctx.step - 1) as ConfiguratorStep)}>
               Indietro
@@ -598,7 +611,7 @@ function InnerWizard() {
           <Button
             onClick={() => ctx.setStep((ctx.step + 1) as ConfiguratorStep)}
             disabled={!canGoNext}
-            className="gap-1.5"
+            className="gap-1.5 shadow-sm shadow-primary/20"
           >
             {ctx.step === 3 ? "Vai al riepilogo" : "Avanti"}
             <ChevronRight className="size-4" />

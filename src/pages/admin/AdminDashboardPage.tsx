@@ -34,7 +34,6 @@ export function AdminDashboardPage() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
 
-  // Model popularity
   const modelCounts = allConfigs.reduce<Record<string, number>>((acc, c) => {
     acc[c.modelId] = (acc[c.modelId] ?? 0) + 1
     return acc
@@ -47,56 +46,56 @@ export function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Panoramica generale del sistema</p>
+        <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Panoramica generale del sistema</p>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-center gap-3 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
-              <Users className="size-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{allUsers.length}</p>
-              <p className="text-xs text-muted-foreground">Utenti totali</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
-              <Car className="size-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{allConfigs.length}</p>
-              <p className="text-xs text-muted-foreground">Configurazioni</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
-              <FileText className="size-5 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{allQuotes.length}</p>
-              <p className="text-xs text-muted-foreground">Preventivi totali</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-5">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
-              <TrendingUp className="size-5 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-xl font-bold">{formatPrice(totalRevenue)}</p>
-              <p className="text-xs text-muted-foreground">Valore approvato</p>
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          {
+            label: "Utenti totali",
+            value: allUsers.length,
+            icon: <Users className="size-5 text-blue-600 dark:text-blue-400" />,
+            bg: "bg-blue-100 dark:bg-blue-900/30",
+            accent: "bg-blue-500",
+          },
+          {
+            label: "Configurazioni",
+            value: allConfigs.length,
+            icon: <Car className="size-5 text-violet-600 dark:text-violet-400" />,
+            bg: "bg-violet-100 dark:bg-violet-900/30",
+            accent: "bg-violet-500",
+          },
+          {
+            label: "Preventivi totali",
+            value: allQuotes.length,
+            icon: <FileText className="size-5 text-amber-600 dark:text-amber-400" />,
+            bg: "bg-amber-100 dark:bg-amber-900/30",
+            accent: "bg-amber-500",
+          },
+          {
+            label: "Valore approvato",
+            value: formatPrice(totalRevenue),
+            isPrice: true,
+            icon: <TrendingUp className="size-5 text-emerald-600 dark:text-emerald-400" />,
+            bg: "bg-emerald-100 dark:bg-emerald-900/30",
+            accent: "bg-emerald-500",
+          },
+        ].map(({ label, value, icon, bg, accent, isPrice }) => (
+          <Card key={label} className="overflow-hidden">
+            <div className={`h-0.5 ${accent}`} />
+            <CardContent className="flex items-center gap-3 p-5">
+              <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${bg}`}>
+                {icon}
+              </div>
+              <div>
+                <p className={isPrice ? "text-lg font-bold" : "text-2xl font-bold"}>{value}</p>
+                <p className="text-xs text-muted-foreground">{label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -108,23 +107,26 @@ export function AdminDashboardPage() {
           <CardContent>
             <div className="flex flex-col gap-4">
               {[
-                { label: "In attesa", count: pendingQuotes.length, icon: <Clock className="size-4 text-amber-500" />, color: "bg-amber-500" },
-                { label: "Approvati", count: approvedQuotes.length, icon: <CheckCircle className="size-4 text-emerald-500" />, color: "bg-emerald-500" },
-                { label: "Rifiutati", count: rejectedQuotes.length, icon: <XCircle className="size-4 text-red-500" />, color: "bg-red-500" },
-              ].map(({ label, count, icon, color }) => (
+                { label: "In attesa", count: pendingQuotes.length, icon: <Clock className="size-4 text-amber-500" />, indicatorClass: "[&>div]:bg-amber-500" },
+                { label: "Approvati", count: approvedQuotes.length, icon: <CheckCircle className="size-4 text-emerald-500" />, indicatorClass: "[&>div]:bg-emerald-500" },
+                { label: "Rifiutati", count: rejectedQuotes.length, icon: <XCircle className="size-4 text-red-500" />, indicatorClass: "[&>div]:bg-red-500" },
+              ].map(({ label, count, icon, indicatorClass }) => (
                 <div key={label} className="flex items-center gap-3">
                   {icon}
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>{label}</span>
-                      <span className="font-medium">{count}</span>
+                    <div className="flex justify-between text-sm mb-1.5">
+                      <span className="font-medium">{label}</span>
+                      <span className="text-muted-foreground">{count}</span>
                     </div>
-                    <Progress value={allQuotes.length ? (count / allQuotes.length) * 100 : 0} className={`h-1.5 [&>div]:${color}`} />
+                    <Progress
+                      value={allQuotes.length ? (count / allQuotes.length) * 100 : 0}
+                      className={`h-1.5 ${indicatorClass}`}
+                    />
                   </div>
                 </div>
               ))}
             </div>
-            <Button variant="outline" size="sm" className="mt-4 w-full gap-1" onClick={() => navigate("/admin/quotes")}>
+            <Button variant="outline" size="sm" className="mt-5 w-full gap-1" onClick={() => navigate("/admin/quotes")}>
               Gestisci preventivi <ArrowRight className="size-3" />
             </Button>
           </CardContent>
@@ -140,13 +142,13 @@ export function AdminDashboardPage() {
               {popularModels.map(({ model, count }) => (
                 <div key={model.id} className="flex items-center gap-3">
                   <div
-                    className="size-8 shrink-0 rounded-md flex items-center justify-center"
-                    style={{ backgroundColor: model.imageColor }}
+                    className="size-8 shrink-0 rounded-lg flex items-center justify-center"
+                    style={{ background: `linear-gradient(135deg, ${model.imageColor}, ${model.imageColor}88)` }}
                   >
                     <Car className="size-4 text-white/80" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between text-sm mb-1">
+                    <div className="flex justify-between text-sm mb-1.5">
                       <span className="truncate font-medium">{model.brand} {model.name}</span>
                       <span className="text-muted-foreground ml-2">{count}</span>
                     </div>
@@ -162,7 +164,7 @@ export function AdminDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base">Ultimi preventivi</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/admin/quotes")} className="gap-1">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/admin/quotes")} className="gap-1 text-primary hover:text-primary">
               Tutti <ArrowRight className="size-3" />
             </Button>
           </CardHeader>
@@ -175,8 +177,8 @@ export function AdminDashboardPage() {
                 return (
                   <div
                     key={quote.id}
-                    className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-muted/30 -mx-2 px-2 rounded transition-colors"
-                    onClick={() => navigate(`/admin/quotes`)}
+                    className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-muted/40 -mx-2 px-2 rounded transition-colors"
+                    onClick={() => navigate("/admin/quotes")}
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{user?.name ?? "—"}</p>
@@ -190,7 +192,7 @@ export function AdminDashboardPage() {
                 )
               })}
               {recentQuotes.length === 0 && (
-                <p className="text-sm text-muted-foreground py-4 text-center">Nessun preventivo</p>
+                <p className="text-sm text-muted-foreground py-6 text-center">Nessun preventivo</p>
               )}
             </div>
           </CardContent>

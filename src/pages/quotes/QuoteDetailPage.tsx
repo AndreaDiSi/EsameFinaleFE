@@ -30,9 +30,14 @@ export function QuoteDetailPage() {
 
   if (!quote) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <AlertCircle className="size-10 text-muted-foreground" />
-        <p className="text-muted-foreground">Preventivo non trovato</p>
+      <div className="flex flex-col items-center gap-4 py-20 text-center">
+        <div className="flex size-16 items-center justify-center rounded-2xl bg-muted">
+          <AlertCircle className="size-8 text-muted-foreground/40" />
+        </div>
+        <div>
+          <p className="font-medium">Preventivo non trovato</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Il preventivo potrebbe essere stato eliminato</p>
+        </div>
         <Button onClick={() => navigate("/quotes")}>Torna ai preventivi</Button>
       </div>
     )
@@ -84,12 +89,11 @@ export function QuoteDetailPage() {
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Preventivo #{quote.id.slice(0, 8).toUpperCase()}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Preventivo #{quote.id.slice(0, 8).toUpperCase()}</h1>
           <p className="text-sm text-muted-foreground">Richiesto il {formatDate(quote.createdAt)}</p>
         </div>
       </div>
 
-      {/* Status alert */}
       <Alert variant={quote.status === "approved" ? "success" : quote.status === "rejected" ? "destructive" : "default"}>
         {status.icon}
         <AlertDescription>
@@ -99,8 +103,13 @@ export function QuoteDetailPage() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="md:col-span-2 flex flex-col gap-4">
-          {/* Vehicle info */}
-          <Card>
+          <Card className="overflow-hidden">
+            {model && (
+              <div
+                className="h-1.5"
+                style={{ background: `linear-gradient(to right, ${model.imageColor}, ${model.imageColor}55)` }}
+              />
+            )}
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <Car className="size-4" />
@@ -111,10 +120,10 @@ export function QuoteDetailPage() {
               {config ? (
                 <div className="flex flex-col gap-4">
                   <div
-                    className="h-28 rounded-lg flex items-center justify-center"
-                    style={{ background: `linear-gradient(135deg, ${model?.imageColor ?? "#333"}, ${model?.imageColor ?? "#333"}88)` }}
+                    className="h-28 rounded-xl flex items-center justify-center"
+                    style={{ background: `linear-gradient(145deg, ${model?.imageColor ?? "#333"}dd, ${model?.imageColor ?? "#333"}77)` }}
                   >
-                    <svg viewBox="0 0 200 80" className="w-32 fill-white/80">
+                    <svg viewBox="0 0 200 80" className="w-32 fill-white/80 drop-shadow-sm">
                       <path d="M160,50 L150,30 Q145,20 130,20 L70,20 Q55,20 50,30 L40,50 L30,50 Q25,50 25,55 L25,62 Q25,65 30,65 L35,65 Q35,72 42,72 Q49,72 49,65 L151,65 Q151,72 158,72 Q165,72 165,65 L170,65 Q175,65 175,62 L175,55 Q175,50 170,50 Z" />
                     </svg>
                   </div>
@@ -140,27 +149,26 @@ export function QuoteDetailPage() {
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Configurazione non più disponibile</p>
+                <p className="text-sm text-muted-foreground py-4">Configurazione non più disponibile</p>
               )}
             </CardContent>
           </Card>
 
-          {/* Notes */}
           {(quote.notes || quote.adminNotes) && (
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Note</CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col gap-3">
+              <CardContent className="flex flex-col gap-4">
                 {quote.notes && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Tue note</p>
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">Tue note</p>
                     <p className="text-sm">{quote.notes}</p>
                   </div>
                 )}
                 {quote.adminNotes && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Risposta concessionaria</p>
+                  <div className="rounded-lg bg-primary/5 border border-primary/10 p-3">
+                    <p className="text-[10px] font-semibold text-primary/70 uppercase tracking-widest mb-1.5">Risposta concessionaria</p>
                     <p className="text-sm">{quote.adminNotes}</p>
                   </div>
                 )}
@@ -169,16 +177,16 @@ export function QuoteDetailPage() {
           )}
         </div>
 
-        {/* Price summary */}
         <div className="flex flex-col gap-4">
-          <Card>
+          <Card className="overflow-hidden">
+            <div className="h-0.5 bg-primary" />
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Riepilogo prezzi</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Prezzo configurazione</span>
+                  <span className="text-muted-foreground">Configurazione</span>
                   <span>{formatPrice(quote.totalPrice)}</span>
                 </div>
                 {quote.discount > 0 && (
@@ -197,8 +205,8 @@ export function QuoteDetailPage() {
           </Card>
 
           <Card>
-            <CardContent className="p-4 flex flex-col gap-2 text-sm">
-              <div className="flex justify-between">
+            <CardContent className="p-4 flex flex-col gap-3 text-sm">
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Stato</span>
                 <Badge variant={status.variant} className="gap-1">{status.icon}{status.label}</Badge>
               </div>
@@ -219,7 +227,7 @@ export function QuoteDetailPage() {
           </Button>
 
           {quote.status === "approved" && (
-            <Button className="gap-2 w-full">
+            <Button className="gap-2 w-full shadow-sm shadow-primary/20">
               <Send className="size-4" />
               Contattaci per l'ordine
             </Button>

@@ -1,7 +1,7 @@
 import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { User, Moon, Sun, Monitor, Check } from "lucide-react"
+import { User, Moon, Sun, Monitor, Check, Shield } from "lucide-react"
 import { z } from "zod"
 
 import { useAuth } from "@/context/AuthContext"
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 
 const profileSchema = z.object({
   name: z.string().min(2, "Minimo 2 caratteri"),
@@ -55,37 +56,42 @@ export function SettingsPage() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold">Impostazioni</h1>
-        <p className="text-sm text-muted-foreground">Gestisci il tuo profilo e le preferenze</p>
+        <h1 className="text-2xl font-bold tracking-tight">Impostazioni</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Gestisci il tuo profilo e le preferenze</p>
       </div>
 
-      {/* Profile */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <User className="size-4" />
-            Profilo utente
-          </CardTitle>
-          <CardDescription>Aggiorna le tue informazioni personali</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4 mb-6">
-            <Avatar className="size-16">
-              <AvatarFallback className="text-xl">{user ? getInitials(user.name) : "?"}</AvatarFallback>
+      {/* Profile hero */}
+      <Card className="overflow-hidden">
+        <div className="h-16 bg-gradient-to-br from-primary/80 via-primary to-[oklch(0.4_0.22_255)]" />
+        <CardContent className="px-6 pb-6">
+          <div className="flex items-end gap-4 -mt-8 mb-5">
+            <Avatar className="size-16 ring-4 ring-background shadow-md">
+              <AvatarFallback className="text-xl font-bold bg-primary/15 text-primary">
+                {user ? getInitials(user.name) : "?"}
+              </AvatarFallback>
             </Avatar>
-            <div>
-              <p className="font-semibold">{user?.name}</p>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
-              <p className="text-xs text-muted-foreground capitalize mt-0.5">Ruolo: {user?.role}</p>
+            <div className="pb-1">
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-lg leading-none">{user?.name}</p>
+                {user?.role === "admin" && (
+                  <Badge variant="info" className="gap-1">
+                    <Shield className="size-3" />
+                    Admin
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-0.5">{user?.email}</p>
             </div>
           </div>
+
+          {success && (
+            <Alert variant="success" className="mb-4">
+              <Check className="size-4" />
+              <AlertDescription>Profilo aggiornato con successo!</AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-            {success && (
-              <Alert variant="success">
-                <Check className="size-4" />
-                <AlertDescription>Profilo aggiornato con successo!</AlertDescription>
-              </Alert>
-            )}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="name">Nome completo</Label>
@@ -99,7 +105,7 @@ export function SettingsPage() {
               </div>
             </div>
             <div className="flex justify-end">
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="shadow-sm shadow-primary/20">
                 {isSubmitting ? "Salvataggio…" : "Salva modifiche"}
               </Button>
             </div>
@@ -107,31 +113,46 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Profilo section header */}
+      <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+        <User className="size-4" />
+        Preferenze
+      </div>
+
       {/* Theme */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Tema</CardTitle>
-          <CardDescription>Scegli l'aspetto dell'interfaccia</CardDescription>
+          <CardTitle className="text-base">Tema dell'interfaccia</CardTitle>
+          <CardDescription>Scegli l'aspetto che preferisci</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-3">
-            {themeOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setTheme(opt.value)}
-                className={`flex flex-1 flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
-                  theme === opt.value ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                }`}
-              >
-                {opt.icon}
-                <span className="text-sm font-medium">{opt.label}</span>
-                {theme === opt.value && (
-                  <div className="flex size-4 items-center justify-center rounded-full bg-primary">
-                    <Check className="size-2.5 text-primary-foreground" />
+            {themeOptions.map((opt) => {
+              const isSelected = theme === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setTheme(opt.value)}
+                  className={`flex flex-1 flex-col items-center gap-2.5 rounded-xl border-2 p-4 transition-all ${
+                    isSelected
+                      ? "border-primary bg-primary/5 shadow-sm shadow-primary/15"
+                      : "border-border hover:border-primary/40 hover:bg-muted/50"
+                  }`}
+                >
+                  <div className={isSelected ? "text-primary" : "text-muted-foreground"}>
+                    {opt.icon}
                   </div>
-                )}
-              </button>
-            ))}
+                  <span className={`text-sm font-medium ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+                    {opt.label}
+                  </span>
+                  {isSelected && (
+                    <div className="flex size-4 items-center justify-center rounded-full bg-primary">
+                      <Check className="size-2.5 text-primary-foreground" />
+                    </div>
+                  )}
+                </button>
+              )
+            })}
           </div>
         </CardContent>
       </Card>

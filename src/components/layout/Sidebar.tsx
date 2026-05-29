@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom"
+import { NavLink, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
   Car,
@@ -8,9 +8,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Wrench,
+  Shield,
 } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import * as React from "react"
 
 interface SidebarProps {
@@ -22,88 +24,139 @@ interface NavItem {
   to: string
   icon: React.ReactNode
   label: string
-  adminOnly?: boolean
+  end?: boolean
 }
 
-const NAV_ITEMS: NavItem[] = [
+const USER_NAV: NavItem[] = [
   { to: "/dashboard", icon: <LayoutDashboard className="size-4.5" />, label: "Dashboard" },
   { to: "/configurator", icon: <Car className="size-4.5" />, label: "Configuratore" },
   { to: "/quotes", icon: <FileText className="size-4.5" />, label: "Preventivi" },
-  { to: "/admin", icon: <LayoutDashboard className="size-4.5" />, label: "Admin Dashboard", adminOnly: true },
-  { to: "/admin/quotes", icon: <FileText className="size-4.5" />, label: "Gestione Preventivi", adminOnly: true },
-  { to: "/admin/users", icon: <Users className="size-4.5" />, label: "Utenti", adminOnly: true },
-  { to: "/admin/models", icon: <Wrench className="size-4.5" />, label: "Modelli Auto", adminOnly: true },
 ]
+
+const ADMIN_NAV: NavItem[] = [
+  { to: "/admin", icon: <LayoutDashboard className="size-4.5" />, label: "Dashboard", end: true },
+  { to: "/admin/quotes", icon: <FileText className="size-4.5" />, label: "Preventivi" },
+  { to: "/admin/users", icon: <Users className="size-4.5" />, label: "Utenti" },
+  { to: "/admin/models", icon: <Wrench className="size-4.5" />, label: "Modelli Auto" },
+]
+
+function getInitials(name: string) {
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+}
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const isAdmin = user?.role === "admin"
 
-  const visibleItems = NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === "admin")
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 border-l-2",
+      isActive
+        ? "bg-primary/10 text-primary border-primary"
+        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground border-transparent",
+      collapsed && "justify-center px-2 border-l-0 border-none"
+    )
 
   return (
     <aside
       className={cn(
-        "relative flex h-full flex-col border-r border-border bg-card transition-all duration-300",
-        collapsed ? "w-16" : "w-60"
+        "relative flex h-full flex-col border-r border-border bg-sidebar transition-all duration-300",
+        collapsed ? "w-[60px]" : "w-60"
       )}
     >
-      <div className={cn("flex items-center gap-3 px-4 py-5 border-b border-border", collapsed && "justify-center px-2")}>
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary">
+      {/* Brand */}
+      <div className={cn("flex items-center gap-3 px-4 py-5 border-b border-border", collapsed && "justify-center px-3")}>
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary shadow-md shadow-primary/40">
           <Car className="size-4 text-primary-foreground" />
         </div>
         {!collapsed && (
           <div>
-            <p className="text-sm font-bold leading-none">AutoConfig</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Configuratore</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.14em] leading-none text-foreground">
+              AutoConfig
+            </p>
+            <p className="text-[10px] text-primary mt-1 font-semibold tracking-widest uppercase">
+              Pro Configurator
+            </p>
           </div>
         )}
       </div>
 
-      <nav className="flex flex-col gap-1 p-2 flex-1 overflow-y-auto">
-        {visibleItems.map((item) => (
+      {/* Navigation */}
+      <nav className="flex flex-col gap-0.5 p-2 flex-1 overflow-y-auto">
+        {!collapsed && (
+          <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50 select-none">
+            Menu
+          </p>
+        )}
+        {USER_NAV.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === "/admin"}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                collapsed && "justify-center px-2"
-              )
-            }
+            className={navLinkClass}
             title={collapsed ? item.label : undefined}
           >
             {item.icon}
             {!collapsed && <span>{item.label}</span>}
           </NavLink>
         ))}
+
+        {isAdmin && (
+          <>
+            {!collapsed ? (
+              <p className="px-3 pt-4 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50 flex items-center gap-1.5 select-none">
+                <Shield className="size-3" />
+                Amministrazione
+              </p>
+            ) : (
+              <div className="my-2 border-t border-border/60 mx-1" />
+            )}
+            {ADMIN_NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={navLinkClass}
+                title={collapsed ? item.label : undefined}
+              >
+                {item.icon}
+                {!collapsed && <span>{item.label}</span>}
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
 
+      {/* User card */}
       <div className="border-t border-border p-2">
-        <NavLink
-          to="/settings"
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              isActive
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              collapsed && "justify-center px-2"
-            )
-          }
-          title={collapsed ? "Impostazioni" : undefined}
+        <button
+          onClick={() => navigate("/settings")}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-accent text-left",
+            collapsed && "justify-center"
+          )}
         >
-          <Settings className="size-4.5" />
-          {!collapsed && <span>Impostazioni</span>}
-        </NavLink>
+          <Avatar className="size-7 shrink-0">
+            <AvatarFallback className="text-[11px] font-bold bg-primary/15 text-primary">
+              {user ? getInitials(user.name) : "?"}
+            </AvatarFallback>
+          </Avatar>
+          {!collapsed && (
+            <>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium truncate leading-none">{user?.name}</p>
+                <p className="text-[11px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
+              </div>
+              <Settings className="size-3.5 text-muted-foreground shrink-0" />
+            </>
+          )}
+        </button>
       </div>
 
+      {/* Toggle button */}
       <button
         onClick={onToggle}
-        className="absolute -right-3 top-20 flex size-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-muted transition-colors"
+        className="absolute -right-3 top-[76px] flex size-6 items-center justify-center rounded-full border border-border bg-sidebar shadow-md hover:bg-muted transition-colors"
         aria-label={collapsed ? "Espandi sidebar" : "Riduci sidebar"}
       >
         {collapsed ? <ChevronRight className="size-3" /> : <ChevronLeft className="size-3" />}

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { db } from "@/lib/mock-data"
-import { saveSession, clearSession, getStoredUser, generateToken } from "@/lib/auth"
+import { saveSession, clearSession, getStoredUser } from "@/lib/auth"
 import type { User } from "@/types"
 
 interface AuthContextValue {
@@ -10,7 +10,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string) => Promise<void>
   logout: () => void
-  updateCurrentUser: (updated: User) => void
+  updateCurrentUser: (updated: User) => Promise<void>
 }
 
 const AuthContext = React.createContext<AuthContextValue | undefined>(undefined)
@@ -20,9 +20,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = React.useState(true)
 
   React.useEffect(() => {
-    const stored = getStoredUser()
-    if (stored) setUser(stored)
-    setIsLoading(false)
+    getStoredUser().then((stored) => {
+      if (stored) setUser(stored)
+      setIsLoading(false)
+    })
   }, [])
 
   async function login(email: string, password: string) {
@@ -30,8 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!found || !db.validatePassword(found.id, password)) {
       throw new Error("Credenziali non valide")
     }
-    const token = generateToken(found.id)
-    saveSession(found, token)
+    await saveSession(found)
     setUser(found)
   }
 
@@ -39,8 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const existing = db.findUserByEmail(email)
     if (existing) throw new Error("Email già registrata")
     const newUser = db.createUser({ name, email, password })
-    const token = generateToken(newUser.id)
-    saveSession(newUser, token)
+    await saveSession(newUser)
     setUser(newUser)
   }
 
@@ -49,9 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
-  function updateCurrentUser(updated: User) {
+  async function updateCurrentUser(updated: User) {
     setUser(updated)
-    saveSession(updated, generateToken(updated.id))
+    await saveSession(updated)
   }
 
   return (

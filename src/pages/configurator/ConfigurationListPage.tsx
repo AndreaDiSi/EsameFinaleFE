@@ -7,7 +7,6 @@ import { db } from "@/lib/mock-data"
 import { formatPrice, formatDate } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
@@ -63,11 +62,11 @@ export function ConfigurationListPage() {
 
   const filtered = configs.filter((c) => {
     const model = db.getModelById(c.modelId)
-    const search_lower = search.toLowerCase()
+    const s = search.toLowerCase()
     return (
-      c.name.toLowerCase().includes(search_lower) ||
-      model?.brand.toLowerCase().includes(search_lower) ||
-      model?.name.toLowerCase().includes(search_lower)
+      c.name.toLowerCase().includes(s) ||
+      model?.brand.toLowerCase().includes(s) ||
+      model?.name.toLowerCase().includes(s)
     )
   })
 
@@ -75,10 +74,11 @@ export function ConfigurationListPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold">Le mie configurazioni</h1>
-          <p className="text-sm text-muted-foreground">{configs.length} configurazioni salvate</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-1">Archivio</p>
+          <h1 className="text-3xl font-black tracking-tight">Le mie configurazioni</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{configs.length} configurazioni salvate</p>
         </div>
-        <Button onClick={() => navigate("/configurator/new")} className="gap-2">
+        <Button onClick={() => navigate("/configurator/new")} className="gap-2 rounded-full px-5 shadow-md shadow-primary/25 font-bold">
           <Plus className="size-4" />
           Nuova configurazione
         </Button>
@@ -88,7 +88,7 @@ export function ConfigurationListPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Cerca configurazione…"
+            placeholder="Cerca per nome o modello…"
             className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -97,18 +97,20 @@ export function ConfigurationListPage() {
       )}
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 py-16 text-center">
-          <div className="flex size-16 items-center justify-center rounded-full bg-muted">
-            <Car className="size-8 text-muted-foreground" />
+        <div className="flex flex-col items-center gap-4 py-20 text-center">
+          <div className="flex size-20 items-center justify-center rounded-2xl bg-muted">
+            <Car className="size-10 text-muted-foreground/35" />
           </div>
           <div>
-            <p className="font-medium">Nessuna configurazione trovata</p>
+            <p className="font-semibold text-base">
+              {search ? "Nessun risultato" : "Nessuna configurazione ancora"}
+            </p>
             <p className="text-sm text-muted-foreground mt-1">
               {search ? "Prova a cambiare il termine di ricerca" : "Crea la tua prima configurazione personalizzata"}
             </p>
           </div>
           {!search && (
-            <Button onClick={() => navigate("/configurator/new")} className="gap-2">
+            <Button onClick={() => navigate("/configurator/new")} className="gap-2 shadow-sm shadow-primary/20">
               <Plus className="size-4" />
               Inizia a configurare
             </Button>
@@ -126,64 +128,86 @@ export function ConfigurationListPage() {
             )
 
             return (
-              <Card key={config.id} className="group overflow-hidden hover:shadow-md transition-shadow">
+              <div
+                key={config.id}
+                className="group relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/40 transition-all duration-200 cursor-pointer"
+              >
+                {/* Card hero — color band with car watermark */}
                 <div
-                  className="h-28 flex items-center justify-center"
-                  style={{ background: `linear-gradient(135deg, ${model?.imageColor ?? "#333"}, ${model?.imageColor ?? "#333"}88)` }}
+                  className="relative h-28 flex items-center justify-center overflow-hidden"
+                  style={{ background: `linear-gradient(145deg, ${model?.imageColor ?? "#333"}cc, ${model?.imageColor ?? "#333"}44)` }}
+                  onClick={() => navigate(`/configurator/${config.id}`)}
                 >
-                  <svg viewBox="0 0 200 80" className="w-32 fill-white/80">
+                  {/* Background car watermark */}
+                  <svg viewBox="0 0 200 80" className="absolute right-0 bottom-0 w-36 fill-white/10">
                     <path d="M160,50 L150,30 Q145,20 130,20 L70,20 Q55,20 50,30 L40,50 L30,50 Q25,50 25,55 L25,62 Q25,65 30,65 L35,65 Q35,72 42,72 Q49,72 49,65 L151,65 Q151,72 158,72 Q165,72 165,65 L170,65 Q175,65 175,62 L175,55 Q175,50 170,50 Z" />
                   </svg>
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-semibold truncate">{config.name}</p>
-                      <p className="text-sm text-muted-foreground">{model?.brand} {model?.name} · {mot?.name}</p>
+                  {/* Centered car */}
+                  <svg viewBox="0 0 200 80" className="w-28 fill-white/75 drop-shadow-md relative z-10">
+                    <path d="M160,50 L150,30 Q145,20 130,20 L70,20 Q55,20 50,30 L40,50 L30,50 Q25,50 25,55 L25,62 Q25,65 30,65 L35,65 Q35,72 42,72 Q49,72 49,65 L151,65 Q151,72 158,72 Q165,72 165,65 L170,65 Q175,65 175,62 L175,55 Q175,50 170,50 Z" />
+                  </svg>
+                  {hasActiveQuote && (
+                    <div className="absolute top-2 left-2 z-10">
+                      <Badge variant="info" className="text-[10px] rounded-full">Preventivo attivo</Badge>
                     </div>
-                    {hasActiveQuote && <Badge variant="info" className="shrink-0">Preventivo</Badge>}
+                  )}
+                  {/* Arrow button top right */}
+                  <div
+                    className="absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-full bg-black/30 text-white/70 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/configurator/${config.id}`) }}
+                  >
+                    <Edit className="size-3.5" />
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-1">
-                    {options.slice(0, 3).map((opt) => (
-                      <Badge key={opt.id} variant="outline" className="text-xs">{opt.name}</Badge>
-                    ))}
-                    {options.length > 3 && (
-                      <Badge variant="outline" className="text-xs">+{options.length - 3}</Badge>
-                    )}
+                </div>
+
+                {/* Card body */}
+                <div className="p-4" onClick={() => navigate(`/configurator/${config.id}`)}>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground mb-1">
+                    {model?.brand}
+                  </p>
+                  <p className="font-black text-sm truncate">{config.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{model?.name} · {mot?.name}</p>
+
+                  {options.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {options.slice(0, 2).map((opt) => (
+                        <Badge key={opt.id} variant="outline" className="text-[10px] rounded-full">{opt.name}</Badge>
+                      ))}
+                      {options.length > 2 && (
+                        <Badge variant="outline" className="text-[10px] rounded-full">+{options.length - 2}</Badge>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between mt-3">
+                    <p className="font-black text-primary">{formatPrice(config.totalPrice)}</p>
+                    <p className="text-[10px] text-muted-foreground">{formatDate(config.updatedAt)}</p>
                   </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <p className="font-bold text-primary">{formatPrice(config.totalPrice)}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(config.updatedAt)}</p>
-                  </div>
-                  <div className="mt-3 flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 gap-1.5"
-                      onClick={() => navigate(`/configurator/${config.id}`)}
-                    >
-                      <Edit className="size-3.5" />
-                      Modifica
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1 gap-1.5"
-                      onClick={() => handleRequestQuote(config.id)}
-                    >
-                      <FileText className="size-3.5" />
-                      Preventivo
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setToDelete(config.id)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Action footer */}
+                <div className="flex gap-2 px-4 pb-4" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    size="sm"
+                    className="flex-1 gap-1.5 rounded-full shadow-sm shadow-primary/20 font-semibold text-xs"
+                    onClick={() => handleRequestQuote(config.id)}
+                  >
+                    <FileText className="size-3.5" />
+                    Preventivo
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-full"
+                    onClick={() => setToDelete(config.id)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+
+                {/* Bottom accent line */}
+                <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-primary transition-all duration-300 group-hover:w-full" />
+              </div>
             )
           })}
         </div>

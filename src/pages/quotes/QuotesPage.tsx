@@ -26,11 +26,23 @@ function QuoteCard({ quote }: { quote: Quote }) {
   const status = STATUS_CONFIG[quote.status]
 
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/quotes/${quote.id}`)}>
+    <Card
+      className="hover:shadow-md transition-all duration-200 cursor-pointer hover:-translate-y-0.5 overflow-hidden"
+      onClick={() => navigate(`/quotes/${quote.id}`)}
+    >
+      {model && (
+        <div
+          className="h-1.5"
+          style={{ background: `linear-gradient(to right, ${model.imageColor}, ${model.imageColor}77)` }}
+        />
+      )}
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <div
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl"
+              style={model ? { background: `linear-gradient(135deg, ${model.imageColor}44, ${model.imageColor}22)` } : undefined}
+            >
               <FileText className="size-5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
@@ -73,6 +85,17 @@ function QuoteCard({ quote }: { quote: Quote }) {
   )
 }
 
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center gap-3 py-14 text-center">
+      <div className="flex size-16 items-center justify-center rounded-2xl bg-muted">
+        <FileText className="size-8 text-muted-foreground/35" />
+      </div>
+      <p className="text-sm text-muted-foreground">Nessun preventivo in questa categoria</p>
+    </div>
+  )
+}
+
 export function QuotesPage() {
   const { user } = useAuth()
   const [quotes, setQuotes] = React.useState<Quote[]>([])
@@ -86,20 +109,11 @@ export function QuotesPage() {
   const approved = quotes.filter((q) => q.status === "approved")
   const rejected = quotes.filter((q) => q.status === "rejected" || q.status === "expired")
 
-  function EmptyState() {
-    return (
-      <div className="flex flex-col items-center gap-3 py-12 text-center">
-        <FileText className="size-10 text-muted-foreground/40" />
-        <p className="text-sm text-muted-foreground">Nessun preventivo in questa categoria</p>
-      </div>
-    )
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold">I miei preventivi</h1>
-        <p className="text-sm text-muted-foreground">{quotes.length} preventivi totali</p>
+        <h1 className="text-2xl font-bold tracking-tight">I miei preventivi</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{quotes.length} preventivi totali</p>
       </div>
 
       <Tabs defaultValue="all">
@@ -110,28 +124,28 @@ export function QuotesPage() {
           <TabsTrigger value="other">Altro ({rejected.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="mt-4">
+        <TabsContent value="all" className="mt-5">
           {quotes.length === 0 ? <EmptyState /> : (
             <div className="flex flex-col gap-3">
               {quotes.map((q) => <QuoteCard key={q.id} quote={q} />)}
             </div>
           )}
         </TabsContent>
-        <TabsContent value="pending" className="mt-4">
+        <TabsContent value="pending" className="mt-5">
           {pending.length === 0 ? <EmptyState /> : (
             <div className="flex flex-col gap-3">
               {pending.map((q) => <QuoteCard key={q.id} quote={q} />)}
             </div>
           )}
         </TabsContent>
-        <TabsContent value="approved" className="mt-4">
+        <TabsContent value="approved" className="mt-5">
           {approved.length === 0 ? <EmptyState /> : (
             <div className="flex flex-col gap-3">
               {approved.map((q) => <QuoteCard key={q.id} quote={q} />)}
             </div>
           )}
         </TabsContent>
-        <TabsContent value="other" className="mt-4">
+        <TabsContent value="other" className="mt-5">
           {rejected.length === 0 ? <EmptyState /> : (
             <div className="flex flex-col gap-3">
               {rejected.map((q) => <QuoteCard key={q.id} quote={q} />)}
