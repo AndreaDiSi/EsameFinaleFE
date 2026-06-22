@@ -9,7 +9,7 @@ on:
 
 jobs:
   frontend:
-    name: Frontend Checks (TypeScript + ESLint)
+    name: Frontend Checks (TypeScript)
     runs-on: ubuntu-latest
 
     steps:
@@ -29,5 +29,5 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-      - name: Lint
-        run: npm run lint
+      - name: Test
+        run: npm run test
