@@ -24,7 +24,7 @@ const STATUS_CONFIG: Record<QuoteStatus, { label: string; variant: "success" | "
   expired: { label: "Scaduto", variant: "outline", icon: <AlertCircle className="size-3.5" /> },
 }
 
-function QuoteRow({ quote, onEdit }: { quote: Quote; onEdit: (q: Quote) => void }) {
+function QuoteRow({ quote, onEdit }: Readonly<{ quote: Quote; onEdit: (q: Quote) => void }>) {
   const config = db.getConfigurationById(quote.configurationId)
   const user = db.getUsers().find((u) => u.id === quote.userId)
   const model = config ? db.getModelById(config.modelId) : null

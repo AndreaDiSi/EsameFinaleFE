@@ -6,7 +6,7 @@ interface ProtectedRouteProps {
   allowedRoles?: Role[]
 }
 
-export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
+export function ProtectedRoute({ allowedRoles }: Readonly<ProtectedRouteProps>) {
   const { isAuthenticated, isLoading, user } = useAuth()
 
   if (isLoading) {

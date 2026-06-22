@@ -28,6 +28,12 @@ interface ConfiguratorContextValue extends ConfiguratorState {
 
 const ConfiguratorContext = React.createContext<ConfiguratorContextValue | undefined>(undefined)
 
+function isOptionValidForMotorization(optionId: string, motorizationId: string): boolean {
+  const opt = CAR_OPTIONS.find((o) => o.id === optionId)
+  if (!opt?.requiredMotorizations) return true
+  return opt.requiredMotorizations.includes(motorizationId)
+}
+
 const initialState: ConfiguratorState = {
   step: 1,
   selectedModel: null,
@@ -37,7 +43,7 @@ const initialState: ConfiguratorState = {
   editingConfigId: null,
 }
 
-export function ConfiguratorProvider({ children }: { children: React.ReactNode }) {
+export function ConfiguratorProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [state, setState] = React.useState<ConfiguratorState>(initialState)
 
   function setStep(step: ConfiguratorStep) {
@@ -58,11 +64,7 @@ export function ConfiguratorProvider({ children }: { children: React.ReactNode }
     setState((s) => ({
       ...s,
       selectedMotorization: mot,
-      selectedOptionIds: s.selectedOptionIds.filter((id) => {
-        const opt = CAR_OPTIONS.find((o) => o.id === id)
-        if (!opt?.requiredMotorizations) return true
-        return opt.requiredMotorizations.includes(mot.id)
-      }),
+      selectedOptionIds: s.selectedOptionIds.filter((id) => isOptionValidForMotorization(id, mot.id)),
       step: 3,
     }))
   }

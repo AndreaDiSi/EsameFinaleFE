@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils"
 
 const STEPS = ["Modello", "Motore", "Optional", "Riepilogo"]
 
-function StepIndicator({ current }: { current: ConfiguratorStep }) {
+function StepIndicator({ current }: Readonly<{ current: ConfiguratorStep }>) {
   return (
     <div className="flex items-center">
       {STEPS.map((label, idx) => {
@@ -100,7 +100,7 @@ function StepModel() {
   )
 }
 
-function ModelCard({ model, selected, onSelect }: { model: CarModel; selected: boolean; onSelect: (m: CarModel) => void }) {
+function ModelCard({ model, selected, onSelect }: Readonly<{ model: CarModel; selected: boolean; onSelect: (m: CarModel) => void }>) {
   return (
     <Card
       className={cn(
@@ -179,12 +179,12 @@ function StepMotorization() {
   )
 }
 
-function MotorizationCard({ mot, basePrice, selected, onSelect }: {
+function MotorizationCard({ mot, basePrice, selected, onSelect }: Readonly<{
   mot: Motorization
   basePrice: number
   selected: boolean
   onSelect: (m: Motorization) => void
-}) {
+}>) {
   return (
     <Card
       className={cn(
@@ -293,12 +293,12 @@ function StepOptions() {
   )
 }
 
-function OptionCard({ option, selected, compatible, onToggle }: {
+function OptionCard({ option, selected, compatible, onToggle }: Readonly<{
   option: CarOption
   selected: boolean
   compatible: boolean
   onToggle: (id: string) => void
-}) {
+}>) {
   return (
     <Card
       className={cn(
@@ -345,7 +345,7 @@ function OptionCard({ option, selected, compatible, onToggle }: {
   )
 }
 
-function StepSummary({ onSave }: { onSave: () => void }) {
+function StepSummary({ onSave }: Readonly<{ onSave: () => void }>) {
   const { selectedModel, selectedMotorization, selectedOptionIds, configName, setConfigName, totalPrice, editingConfigId } = useConfigurator()
   const { register, handleSubmit, formState: { errors } } = useForm<ConfigurationNameFormData>({
     resolver: zodResolver(configurationNameSchema),
@@ -515,7 +515,7 @@ export function ConfiguratorPage() {
   )
 }
 
-function ConfiguratorInnerWithLoad({ id }: { id?: string }) {
+function ConfiguratorInnerWithLoad({ id }: Readonly<{ id?: string }>) {
   const { loadConfiguration, setStep } = useConfigurator()
   const loaded = React.useRef(false)
 

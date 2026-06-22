@@ -18,7 +18,7 @@ const STATUS_CONFIG: Record<QuoteStatus, { label: string; variant: "success" | "
   expired: { label: "Scaduto", variant: "outline", icon: <AlertCircle className="size-3.5" /> },
 }
 
-function QuoteCard({ quote }: { quote: Quote }) {
+function QuoteCard({ quote }: Readonly<{ quote: Quote }>) {
   const navigate = useNavigate()
   const config = db.getConfigurationById(quote.configurationId)
   const model = config ? db.getModelById(config.modelId) : null

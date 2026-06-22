@@ -44,7 +44,7 @@ function getInitials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
 }
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle }: Readonly<SidebarProps>) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const isAdmin = user?.role === "admin"
