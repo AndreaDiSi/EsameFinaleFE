@@ -10,9 +10,11 @@ export function Layout() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {mobileOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 sm:hidden"
+        <button
+          type="button"
+          className="fixed inset-0 z-30 bg-black/50 sm:hidden cursor-default"
           onClick={() => setMobileOpen(false)}
+          aria-label="Chiudi menu"
         />
       )}
       <Sidebar

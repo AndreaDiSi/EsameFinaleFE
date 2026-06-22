@@ -40,31 +40,35 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
       .finally(() => setIsLoading(false))
   }, [])
 
-  async function login(email: string, password: string) {
+  const login = React.useCallback(async (email: string, password: string) => {
     const { token, user: u } = await api.login(email, password)
     storeSession(token, u)
     setUser(u)
-  }
+  }, [])
 
-  async function register(name: string, email: string, password: string) {
+  const register = React.useCallback(async (name: string, email: string, password: string) => {
     const { token, user: u } = await api.register(name, email, password)
     storeSession(token, u)
     setUser(u)
-  }
+  }, [])
 
-  function logout() {
+  const logout = React.useCallback(() => {
     clearStoredSession()
     setUser(null)
-  }
+  }, [])
 
-  function updateCurrentUser(updated: User) {
+  const updateCurrentUser = React.useCallback((updated: User) => {
     const token = getStoredToken() ?? ""
     storeSession(token, updated)
     setUser(updated)
-  }
+  }, [])
+
+  const value = React.useMemo(() => ({
+    user, isAuthenticated: !!user, isLoading, login, register, logout, updateCurrentUser,
+  }), [user, isLoading, login, register, logout, updateCurrentUser])
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, register, logout, updateCurrentUser }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

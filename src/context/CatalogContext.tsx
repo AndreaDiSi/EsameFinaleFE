@@ -33,35 +33,37 @@ export function CatalogProvider({ children }: Readonly<{ children: React.ReactNo
       .finally(() => setIsLoading(false))
   }, [])
 
-  function getModelById(id: string): CarModel | null {
+  const getModelById = React.useCallback((id: string): CarModel | null => {
     return models.find((m) => m.id === id) ?? null
-  }
+  }, [models])
 
-  function getMotorizationById(id: string): Motorization | null {
+  const getMotorizationById = React.useCallback((id: string): Motorization | null => {
     return motorizations.find((m) => m.id === id) ?? null
-  }
+  }, [motorizations])
 
-  function getMotorizationsByModel(modelId: string): Motorization[] {
+  const getMotorizationsByModel = React.useCallback((modelId: string): Motorization[] => {
     return motorizations.filter((m) => m.modelId === modelId)
-  }
+  }, [motorizations])
 
-  function getOptionsByIds(ids: string[]): CarOption[] {
+  const getOptionsByIds = React.useCallback((ids: string[]): CarOption[] => {
     return options.filter((o) => ids.includes(o.id))
-  }
+  }, [options])
 
-  function calculateTotalPrice(modelId: string, motorizationId: string, optionIds: string[]): number {
+  const calculateTotalPrice = React.useCallback((modelId: string, motorizationId: string, optionIds: string[]): number => {
     const model = models.find((m) => m.id === modelId)
     const mot = motorizations.find((m) => m.id === motorizationId)
     const opts = options.filter((o) => optionIds.includes(o.id))
     return (model?.basePrice ?? 0) + (mot?.price ?? 0) + opts.reduce((sum, o) => sum + o.price, 0)
-  }
+  }, [models, motorizations, options])
+
+  const value = React.useMemo(() => ({
+    models, motorizations, options, isLoading,
+    getModelById, getMotorizationById, getMotorizationsByModel,
+    getOptionsByIds, calculateTotalPrice,
+  }), [models, motorizations, options, isLoading, getModelById, getMotorizationById, getMotorizationsByModel, getOptionsByIds, calculateTotalPrice])
 
   return (
-    <CatalogContext.Provider value={{
-      models, motorizations, options, isLoading,
-      getModelById, getMotorizationById, getMotorizationsByModel,
-      getOptionsByIds, calculateTotalPrice,
-    }}>
+    <CatalogContext.Provider value={value}>
       {children}
     </CatalogContext.Provider>
   )
