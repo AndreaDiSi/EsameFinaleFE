@@ -8,7 +8,7 @@ async function getKey(): Promise<CryptoKey> {
 }
 
 function b64url(buf: ArrayBuffer): string {
-  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+  return btoa(String.fromCodePoint(...new Uint8Array(buf)))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=/g, "")
@@ -17,7 +17,7 @@ function b64url(buf: ArrayBuffer): string {
 function encodeSegment(obj: object): string {
   const bytes = new TextEncoder().encode(JSON.stringify(obj))
   let binary = ""
-  bytes.forEach((b) => (binary += String.fromCharCode(b)))
+  bytes.forEach((b) => (binary += String.fromCodePoint(b)))
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
 }
 
