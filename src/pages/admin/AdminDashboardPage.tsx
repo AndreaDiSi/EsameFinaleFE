@@ -175,13 +175,11 @@ export function AdminDashboardPage() {
                 const config = db.getConfigurationById(quote.configurationId)
                 const status = QUOTE_STATUS[quote.status]
                 return (
-                  <div
+                  <button
                     key={quote.id}
-                    className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-muted/40 -mx-2 px-2 rounded transition-colors"
-                    role="button"
-                    tabIndex={0}
+                    type="button"
+                    className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-muted/40 -mx-2 px-2 rounded transition-colors w-full text-left"
                     onClick={() => navigate("/admin/quotes")}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate("/admin/quotes") }}
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{user?.name ?? "—"}</p>
@@ -191,7 +189,7 @@ export function AdminDashboardPage() {
                       <Badge variant={status.variant} className="text-[10px] py-0">{status.label}</Badge>
                       <p className="text-xs font-medium">{formatPrice(quote.finalPrice)}</p>
                     </div>
-                  </div>
+                  </button>
                 )
               })}
               {recentQuotes.length === 0 && (

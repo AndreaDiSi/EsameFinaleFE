@@ -130,67 +130,65 @@ export function ConfigurationListPage() {
             return (
               <div
                 key={config.id}
-                className="group relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/40 transition-all duration-200 cursor-pointer"
-                role="button"
-                tabIndex={0}
-                onClick={() => navigate(`/configurator/${config.id}`)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/configurator/${config.id}`) }}
+                className="group relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/40 transition-all duration-200"
               >
-                {/* Card hero — color band with car watermark */}
-                <div
-                  className="relative h-28 flex items-center justify-center overflow-hidden"
-                  style={{ background: `linear-gradient(145deg, ${model?.imageColor ?? "#333"}cc, ${model?.imageColor ?? "#333"}44)` }}
+                {/* Clickable hero + body area */}
+                <button
+                  type="button"
+                  className="w-full text-left cursor-pointer"
+                  onClick={() => navigate(`/configurator/${config.id}`)}
                 >
-                  {/* Background car watermark */}
-                  <svg viewBox="0 0 200 80" className="absolute right-0 bottom-0 w-36 fill-white/10">
-                    <path d="M160,50 L150,30 Q145,20 130,20 L70,20 Q55,20 50,30 L40,50 L30,50 Q25,50 25,55 L25,62 Q25,65 30,65 L35,65 Q35,72 42,72 Q49,72 49,65 L151,65 Q151,72 158,72 Q165,72 165,65 L170,65 Q175,65 175,62 L175,55 Q175,50 170,50 Z" />
-                  </svg>
-                  {/* Centered car */}
-                  <svg viewBox="0 0 200 80" className="w-28 fill-white/75 drop-shadow-md relative z-10">
-                    <path d="M160,50 L150,30 Q145,20 130,20 L70,20 Q55,20 50,30 L40,50 L30,50 Q25,50 25,55 L25,62 Q25,65 30,65 L35,65 Q35,72 42,72 Q49,72 49,65 L151,65 Q151,72 158,72 Q165,72 165,65 L170,65 Q175,65 175,62 L175,55 Q175,50 170,50 Z" />
-                  </svg>
-                  {hasActiveQuote && (
-                    <div className="absolute top-2 left-2 z-10">
-                      <Badge variant="info" className="text-[10px] rounded-full">Preventivo attivo</Badge>
+                  {/* Card hero — color band with car watermark */}
+                  <div
+                    className="relative h-28 flex items-center justify-center overflow-hidden"
+                    style={{ background: `linear-gradient(145deg, ${model?.imageColor ?? "#333"}cc, ${model?.imageColor ?? "#333"}44)` }}
+                  >
+                    {/* Background car watermark */}
+                    <svg viewBox="0 0 200 80" className="absolute right-0 bottom-0 w-36 fill-white/10">
+                      <path d="M160,50 L150,30 Q145,20 130,20 L70,20 Q55,20 50,30 L40,50 L30,50 Q25,50 25,55 L25,62 Q25,65 30,65 L35,65 Q35,72 42,72 Q49,72 49,65 L151,65 Q151,72 158,72 Q165,72 165,65 L170,65 Q175,65 175,62 L175,55 Q175,50 170,50 Z" />
+                    </svg>
+                    {/* Centered car */}
+                    <svg viewBox="0 0 200 80" className="w-28 fill-white/75 drop-shadow-md relative z-10">
+                      <path d="M160,50 L150,30 Q145,20 130,20 L70,20 Q55,20 50,30 L40,50 L30,50 Q25,50 25,55 L25,62 Q25,65 30,65 L35,65 Q35,72 42,72 Q49,72 49,65 L151,65 Q151,72 158,72 Q165,72 165,65 L170,65 Q175,65 175,62 L175,55 Q175,50 170,50 Z" />
+                    </svg>
+                    {hasActiveQuote && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <Badge variant="info" className="text-[10px] rounded-full">Preventivo attivo</Badge>
+                      </div>
+                    )}
+                    <div className="absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-full bg-black/30 text-white/70 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200">
+                      <Edit className="size-3.5" />
                     </div>
-                  )}
-                  {/* Edit icon — navigation handled by card wrapper */}
-                  <div className="absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-full bg-black/30 text-white/70 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200">
-                    <Edit className="size-3.5" />
                   </div>
-                </div>
 
-                {/* Card body */}
-                <div className="p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground mb-1">
-                    {model?.brand}
-                  </p>
-                  <p className="font-black text-sm truncate">{config.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{model?.name} · {mot?.name}</p>
+                  {/* Card body */}
+                  <div className="p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground mb-1">
+                      {model?.brand}
+                    </p>
+                    <p className="font-black text-sm truncate">{config.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{model?.name} · {mot?.name}</p>
 
-                  {options.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {options.slice(0, 2).map((opt) => (
-                        <Badge key={opt.id} variant="outline" className="text-[10px] rounded-full">{opt.name}</Badge>
-                      ))}
-                      {options.length > 2 && (
-                        <Badge variant="outline" className="text-[10px] rounded-full">+{options.length - 2}</Badge>
-                      )}
+                    {options.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {options.slice(0, 2).map((opt) => (
+                          <Badge key={opt.id} variant="outline" className="text-[10px] rounded-full">{opt.name}</Badge>
+                        ))}
+                        {options.length > 2 && (
+                          <Badge variant="outline" className="text-[10px] rounded-full">+{options.length - 2}</Badge>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between mt-3">
+                      <p className="font-black text-primary">{formatPrice(config.totalPrice)}</p>
+                      <p className="text-[10px] text-muted-foreground">{formatDate(config.updatedAt)}</p>
                     </div>
-                  )}
-
-                  <div className="flex items-center justify-between mt-3">
-                    <p className="font-black text-primary">{formatPrice(config.totalPrice)}</p>
-                    <p className="text-[10px] text-muted-foreground">{formatDate(config.updatedAt)}</p>
                   </div>
-                </div>
+                </button>
 
                 {/* Action footer */}
-                <div
-                  className="flex gap-2 px-4 pb-4"
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
-                >
+                <div className="flex gap-2 px-4 pb-4">
                   <Button
                     size="sm"
                     className="flex-1 gap-1.5 rounded-full shadow-sm shadow-primary/20 font-semibold text-xs"
@@ -210,7 +208,7 @@ export function ConfigurationListPage() {
                 </div>
 
                 {/* Bottom accent line */}
-                <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-primary transition-all duration-300 group-hover:w-full" />
+                <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-primary transition-all duration-300 group-hover:w-full" />
               </div>
             )
           })}

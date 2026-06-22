@@ -152,13 +152,11 @@ export function DashboardPage() {
       {/* ── SERVICE CARDS ─────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {SERVICES.map((service) => (
-          <div
+          <button
             key={service.title}
-            className="group relative overflow-hidden rounded-xl bg-card border border-border p-5 cursor-pointer hover:border-primary/40 transition-all duration-200"
-            role="button"
-            tabIndex={0}
+            type="button"
+            className="group relative overflow-hidden rounded-xl bg-card border border-border p-5 cursor-pointer hover:border-primary/40 transition-all duration-200 text-left w-full"
             onClick={() => navigate(service.to)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(service.to) }}
           >
             {/* Arrow button top right */}
             <div className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200">
@@ -182,7 +180,7 @@ export function DashboardPage() {
 
             {/* Bottom line accent on hover */}
             <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-primary transition-all duration-300 group-hover:w-full rounded-b-xl" />
-          </div>
+          </button>
         ))}
       </div>
 
@@ -222,13 +220,11 @@ export function DashboardPage() {
                 const model = db.getModelById(config.modelId)
                 const mot = db.getMotorizationById(config.motorizationId)
                 return (
-                  <div
+                  <button
                     key={config.id}
-                    className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors group"
-                    role="button"
-                    tabIndex={0}
+                    type="button"
+                    className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors group w-full text-left"
                     onClick={() => navigate(`/configurator/${config.id}`)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/configurator/${config.id}`) }}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
@@ -246,7 +242,7 @@ export function DashboardPage() {
                       <p className="text-sm font-bold text-primary">{formatPrice(config.totalPrice)}</p>
                       <p className="text-xs text-muted-foreground">{formatDate(config.updatedAt)}</p>
                     </div>
-                  </div>
+                  </button>
                 )
               })
             )}
@@ -287,13 +283,11 @@ export function DashboardPage() {
                 const model = config ? db.getModelById(config.modelId) : null
                 const status = QUOTE_STATUS_MAP[quote.status]
                 return (
-                  <div
+                  <button
                     key={quote.id}
-                    className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                    role="button"
-                    tabIndex={0}
+                    type="button"
+                    className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors w-full text-left"
                     onClick={() => navigate(`/quotes/${quote.id}`)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/quotes/${quote.id}`) }}
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate">{config?.name ?? "Config eliminata"}</p>
@@ -303,7 +297,7 @@ export function DashboardPage() {
                       <Badge variant={status.variant}>{status.label}</Badge>
                       <p className="text-xs font-bold">{formatPrice(quote.finalPrice)}</p>
                     </div>
-                  </div>
+                  </button>
                 )
               })
             )}

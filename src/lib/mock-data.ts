@@ -55,7 +55,7 @@ export const MOTORIZATIONS: Motorization[] = [
   { id: "mo3", modelId: "m1", name: "330i", fuelType: "petrol", power: 258, torque: 400, acceleration: 5.8, consumption: "6.9 L/100km", price: 6800 },
   { id: "mo4", modelId: "m1", name: "330e", fuelType: "hybrid", power: 292, torque: 420, acceleration: 5.9, consumption: "1.8 L/100km", price: 9200 },
   // Audi Q5
-  { id: "mo5", modelId: "m2", name: "35 TDI", fuelType: "diesel", power: 163, torque: 370, acceleration: 9.0, consumption: "5.2 L/100km", price: 0 },
+  { id: "mo5", modelId: "m2", name: "35 TDI", fuelType: "diesel", power: 163, torque: 370, acceleration: 9, consumption: "5.2 L/100km", price: 0 },
   { id: "mo6", modelId: "m2", name: "40 TDI", fuelType: "diesel", power: 204, torque: 400, acceleration: 7.5, consumption: "5.8 L/100km", price: 3200 },
   { id: "mo7", modelId: "m2", name: "45 TFSI", fuelType: "petrol", power: 265, torque: 370, acceleration: 5.9, consumption: "7.3 L/100km", price: 5900 },
   { id: "mo8", modelId: "m2", name: "55 TFSI e", fuelType: "hybrid", power: 367, torque: 500, acceleration: 5.3, consumption: "2.2 L/100km", price: 12500 },
@@ -194,7 +194,9 @@ function saveQuotes(quotes: Quote[]) {
 }
 
 function generateId(): string {
-  return Math.random().toString(36).slice(2, 10)
+  const bytes = new Uint8Array(6)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
 }
 
 export const db = {
