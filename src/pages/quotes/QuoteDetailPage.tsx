@@ -48,6 +48,14 @@ export function QuoteDetailPage() {
   const mot = config ? db.getMotorizationById(config.motorizationId) : null
   const options = config ? db.getOptionsByIds(config.optionIds) : []
   const status = STATUS_CONFIG[quote.status]
+  let alertVariant: "success" | "destructive" | "default"
+  if (quote.status === "approved") {
+    alertVariant = "success"
+  } else if (quote.status === "rejected") {
+    alertVariant = "destructive"
+  } else {
+    alertVariant = "default"
+  }
 
   function handleExport() {
     if (!quote) return
@@ -94,7 +102,7 @@ export function QuoteDetailPage() {
         </div>
       </div>
 
-      <Alert variant={quote.status === "approved" ? "success" : quote.status === "rejected" ? "destructive" : "default"}>
+      <Alert variant={alertVariant}>
         {status.icon}
         <AlertDescription>
           <span className="font-medium">{status.label}.</span> {status.description}

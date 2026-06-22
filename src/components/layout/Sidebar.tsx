@@ -103,13 +103,13 @@ export function Sidebar({ collapsed, onToggle }: Readonly<SidebarProps>) {
 
         {isAdmin && (
           <>
-            {!collapsed ? (
+            {collapsed ? (
+              <div className="my-2 border-t border-border/60 mx-1" />
+            ) : (
               <p className="px-3 pt-4 pb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/50 flex items-center gap-1.5 select-none">
                 <Shield className="size-3" />
                 Amministrazione
               </p>
-            ) : (
-              <div className="my-2 border-t border-border/60 mx-1" />
             )}
             {ADMIN_NAV.map((item) => (
               <NavLink

@@ -28,7 +28,10 @@ function QuoteCard({ quote }: Readonly<{ quote: Quote }>) {
   return (
     <Card
       className="hover:shadow-md transition-all duration-200 cursor-pointer hover:-translate-y-0.5 overflow-hidden"
+      role="button"
+      tabIndex={0}
       onClick={() => navigate(`/quotes/${quote.id}`)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/quotes/${quote.id}`) }}
     >
       {model && (
         <div

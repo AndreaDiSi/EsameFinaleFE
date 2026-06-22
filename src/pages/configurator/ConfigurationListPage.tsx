@@ -131,12 +131,15 @@ export function ConfigurationListPage() {
               <div
                 key={config.id}
                 className="group relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/40 transition-all duration-200 cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/configurator/${config.id}`)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/configurator/${config.id}`) }}
               >
                 {/* Card hero — color band with car watermark */}
                 <div
                   className="relative h-28 flex items-center justify-center overflow-hidden"
                   style={{ background: `linear-gradient(145deg, ${model?.imageColor ?? "#333"}cc, ${model?.imageColor ?? "#333"}44)` }}
-                  onClick={() => navigate(`/configurator/${config.id}`)}
                 >
                   {/* Background car watermark */}
                   <svg viewBox="0 0 200 80" className="absolute right-0 bottom-0 w-36 fill-white/10">
@@ -151,17 +154,14 @@ export function ConfigurationListPage() {
                       <Badge variant="info" className="text-[10px] rounded-full">Preventivo attivo</Badge>
                     </div>
                   )}
-                  {/* Arrow button top right */}
-                  <div
-                    className="absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-full bg-black/30 text-white/70 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200"
-                    onClick={(e) => { e.stopPropagation(); navigate(`/configurator/${config.id}`) }}
-                  >
+                  {/* Edit icon — navigation handled by card wrapper */}
+                  <div className="absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-full bg-black/30 text-white/70 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200">
                     <Edit className="size-3.5" />
                   </div>
                 </div>
 
                 {/* Card body */}
-                <div className="p-4" onClick={() => navigate(`/configurator/${config.id}`)}>
+                <div className="p-4">
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground mb-1">
                     {model?.brand}
                   </p>
@@ -186,7 +186,11 @@ export function ConfigurationListPage() {
                 </div>
 
                 {/* Action footer */}
-                <div className="flex gap-2 px-4 pb-4" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="flex gap-2 px-4 pb-4"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
                   <Button
                     size="sm"
                     className="flex-1 gap-1.5 rounded-full shadow-sm shadow-primary/20 font-semibold text-xs"

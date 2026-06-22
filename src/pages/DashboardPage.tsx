@@ -155,7 +155,10 @@ export function DashboardPage() {
           <div
             key={service.title}
             className="group relative overflow-hidden rounded-xl bg-card border border-border p-5 cursor-pointer hover:border-primary/40 transition-all duration-200"
+            role="button"
+            tabIndex={0}
             onClick={() => navigate(service.to)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(service.to) }}
           >
             {/* Arrow button top right */}
             <div className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200">
@@ -222,7 +225,10 @@ export function DashboardPage() {
                   <div
                     key={config.id}
                     className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors group"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => navigate(`/configurator/${config.id}`)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/configurator/${config.id}`) }}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
@@ -284,7 +290,10 @@ export function DashboardPage() {
                   <div
                     key={quote.id}
                     className="flex items-center justify-between p-3 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => navigate(`/quotes/${quote.id}`)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/quotes/${quote.id}`) }}
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate">{config?.name ?? "Config eliminata"}</p>

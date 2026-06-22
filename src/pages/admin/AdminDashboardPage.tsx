@@ -178,7 +178,10 @@ export function AdminDashboardPage() {
                   <div
                     key={quote.id}
                     className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-muted/40 -mx-2 px-2 rounded transition-colors"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => navigate("/admin/quotes")}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate("/admin/quotes") }}
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{user?.name ?? "—"}</p>

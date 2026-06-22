@@ -28,6 +28,7 @@ function StepIndicator({ current }: Readonly<{ current: ConfiguratorStep }>) {
         const num = (idx + 1) as ConfiguratorStep
         const done = current > num
         const active = current === num
+        const spanColor = done ? "text-primary" : "text-muted-foreground"
         return (
           <React.Fragment key={label}>
             <div className="flex items-center gap-2 shrink-0">
@@ -44,7 +45,7 @@ function StepIndicator({ current }: Readonly<{ current: ConfiguratorStep }>) {
               <span
                 className={cn(
                   "hidden sm:inline text-sm font-medium transition-colors",
-                  active ? "text-foreground" : done ? "text-primary" : "text-muted-foreground"
+                  active ? "text-foreground" : spanColor
                 )}
               >
                 {label}
@@ -107,7 +108,10 @@ function ModelCard({ model, selected, onSelect }: Readonly<{ model: CarModel; se
         "cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden",
         selected && "ring-2 ring-primary shadow-md shadow-primary/15"
       )}
+      role="button"
+      tabIndex={0}
       onClick={() => onSelect(model)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(model) }}
     >
       <CardContent className="p-0">
         <div
@@ -191,7 +195,10 @@ function MotorizationCard({ mot, basePrice, selected, onSelect }: Readonly<{
         "cursor-pointer transition-all duration-200 hover:shadow-md",
         selected && "ring-2 ring-primary shadow-sm shadow-primary/15"
       )}
+      role="button"
+      tabIndex={0}
       onClick={() => onSelect(mot)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelect(mot) }}
     >
       <CardContent className="flex items-center gap-4 p-4">
         <div className={cn(
@@ -306,7 +313,10 @@ function OptionCard({ option, selected, compatible, onToggle }: Readonly<{
         selected && "ring-2 ring-primary shadow-sm shadow-primary/15",
         !compatible && "opacity-50 cursor-not-allowed"
       )}
+      role="button"
+      tabIndex={compatible ? 0 : -1}
       onClick={() => compatible && onToggle(option.id)}
+      onKeyDown={(e) => { if (compatible && (e.key === 'Enter' || e.key === ' ')) onToggle(option.id) }}
     >
       <CardContent className="flex items-start gap-3 p-4">
         {option.category === "color" && option.color ? (
