@@ -1,4 +1,4 @@
-import { CAR_MODELS, MOTORIZATIONS } from "@/lib/mock-data"
+import { useCatalog } from "@/context/CatalogContext"
 import { formatPrice } from "@/lib/auth"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -22,16 +22,18 @@ const FUEL_LABELS: Record<string, string> = {
 }
 
 export function AdminModelsPage() {
+  const { models, getMotorizationsByModel } = useCatalog()
+
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Modelli e motorizzazioni</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{CAR_MODELS.length} modelli disponibili nel catalogo</p>
+        <p className="text-sm text-muted-foreground mt-0.5">{models.length} modelli disponibili nel catalogo</p>
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {CAR_MODELS.map((model) => {
-          const motorizations = MOTORIZATIONS.filter((m) => m.modelId === model.id)
+        {models.map((model) => {
+          const motorizations = getMotorizationsByModel(model.id)
           return (
             <Card key={model.id} className="overflow-hidden hover:shadow-md transition-shadow">
               <div

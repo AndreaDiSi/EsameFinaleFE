@@ -1,6 +1,7 @@
 import * as React from "react"
+import { api } from "@/lib/api"
+import { useCatalog } from "@/context/CatalogContext"
 import type { CarModel, Motorization, CarOption } from "@/types"
-import { db, CAR_OPTIONS } from "@/lib/mock-data"
 
 export type ConfiguratorStep = 1 | 2 | 3 | 4
 
@@ -20,7 +21,7 @@ interface ConfiguratorContextValue extends ConfiguratorState {
   toggleOption: (optionId: string) => void
   setConfigName: (name: string) => void
   reset: () => void
-  loadConfiguration: (configId: string) => void
+  loadConfiguration: (configId: string) => Promise<void>
   totalPrice: number
   availableOptions: CarOption[]
   isOptionCompatible: (optionId: string) => boolean
@@ -28,9 +29,9 @@ interface ConfiguratorContextValue extends ConfiguratorState {
 
 const ConfiguratorContext = React.createContext<ConfiguratorContextValue | undefined>(undefined)
 
-function isOptionValidForMotorization(optionId: string, motorizationId: string): boolean {
-  const opt = CAR_OPTIONS.find((o) => o.id === optionId)
-  if (!opt?.requiredMotorizations) return true
+function isOptionValidForMotorization(optionId: string, motorizationId: string, options: CarOption[]): boolean {
+  const opt = options.find((o) => o.id === optionId)
+  if (!opt?.requiredMotorizations?.length) return true
   return opt.requiredMotorizations.includes(motorizationId)
 }
 
@@ -44,6 +45,7 @@ const initialState: ConfiguratorState = {
 }
 
 export function ConfiguratorProvider({ children }: Readonly<{ children: React.ReactNode }>) {
+  const { options, getModelById, getMotorizationById, calculateTotalPrice } = useCatalog()
   const [state, setState] = React.useState<ConfiguratorState>(initialState)
 
   function setStep(step: ConfiguratorStep) {
@@ -64,7 +66,9 @@ export function ConfiguratorProvider({ children }: Readonly<{ children: React.Re
     setState((s) => ({
       ...s,
       selectedMotorization: mot,
-      selectedOptionIds: s.selectedOptionIds.filter((id) => isOptionValidForMotorization(id, mot.id)),
+      selectedOptionIds: s.selectedOptionIds.filter((id) =>
+        isOptionValidForMotorization(id, mot.id, options)
+      ),
       step: 3,
     }))
   }
@@ -75,7 +79,7 @@ export function ConfiguratorProvider({ children }: Readonly<{ children: React.Re
       if (isSelected) {
         return { ...s, selectedOptionIds: s.selectedOptionIds.filter((id) => id !== optionId) }
       }
-      const opt = CAR_OPTIONS.find((o) => o.id === optionId)
+      const opt = options.find((o) => o.id === optionId)
       if (!opt) return s
       const filtered = s.selectedOptionIds.filter((id) => !opt.incompatibleWith.includes(id))
       return { ...s, selectedOptionIds: [...filtered, optionId] }
@@ -90,11 +94,10 @@ export function ConfiguratorProvider({ children }: Readonly<{ children: React.Re
     setState(initialState)
   }
 
-  function loadConfiguration(configId: string) {
-    const config = db.getConfigurationById(configId)
-    if (!config) return
-    const model = db.getModelById(config.modelId)
-    const mot = db.getMotorizationById(config.motorizationId)
+  async function loadConfiguration(configId: string) {
+    const config = await api.getConfiguration(configId)
+    const model = getModelById(config.modelId)
+    const mot = getMotorizationById(config.motorizationId)
     if (!model || !mot) return
     setState({
       step: 1,
@@ -108,20 +111,20 @@ export function ConfiguratorProvider({ children }: Readonly<{ children: React.Re
 
   const totalPrice = React.useMemo(() => {
     if (!state.selectedModel || !state.selectedMotorization) return 0
-    return db.calculateTotalPrice(state.selectedModel.id, state.selectedMotorization.id, state.selectedOptionIds)
-  }, [state.selectedModel, state.selectedMotorization, state.selectedOptionIds])
+    return calculateTotalPrice(state.selectedModel.id, state.selectedMotorization.id, state.selectedOptionIds)
+  }, [state.selectedModel, state.selectedMotorization, state.selectedOptionIds, calculateTotalPrice])
 
   const availableOptions = React.useMemo(() => {
-    if (!state.selectedMotorization) return CAR_OPTIONS
-    return CAR_OPTIONS.filter((opt) => {
-      if (!opt.requiredMotorizations) return true
+    if (!state.selectedMotorization) return options
+    return options.filter((opt) => {
+      if (!opt.requiredMotorizations?.length) return true
       return opt.requiredMotorizations.includes(state.selectedMotorization!.id)
     })
-  }, [state.selectedMotorization])
+  }, [state.selectedMotorization, options])
 
   function isOptionCompatible(optionId: string): boolean {
     return !state.selectedOptionIds.some((id) => {
-      const opt = CAR_OPTIONS.find((o) => o.id === id)
+      const opt = options.find((o) => o.id === id)
       return opt?.incompatibleWith.includes(optionId)
     })
   }

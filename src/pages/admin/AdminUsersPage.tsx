@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Search, Edit, Trash2, Shield, UserIcon } from "lucide-react"
 
 import { useAuth } from "@/context/AuthContext"
-import { db } from "@/lib/mock-data"
+import { api } from "@/lib/api"
 import { formatDate } from "@/lib/auth"
 import { userEditSchema, type UserEditFormData } from "@/lib/schemas"
 import { Button } from "@/components/ui/button"
@@ -28,7 +28,10 @@ export function AdminUsersPage() {
   const [editingUser, setEditingUser] = React.useState<User | null>(null)
   const [toDelete, setToDelete] = React.useState<User | null>(null)
 
-  function load() { setUsers(db.getUsers()) }
+  async function load() {
+    const u = await api.getUsers()
+    setUsers(u)
+  }
 
   React.useEffect(() => { load() }, [])
 
@@ -46,17 +49,17 @@ export function AdminUsersPage() {
     resetForm({ name: user.name, email: user.email, role: user.role })
   }
 
-  function onSubmitEdit(data: UserEditFormData) {
+  async function onSubmitEdit(data: UserEditFormData) {
     if (!editingUser) return
-    const updated = db.updateUser(editingUser.id, { name: data.name, email: data.email, role: data.role })
+    const updated = await api.updateUser(editingUser.id, { name: data.name, email: data.email, role: data.role })
     if (currentUser?.id === editingUser.id) updateCurrentUser(updated)
     setEditingUser(null)
     load()
   }
 
-  function handleDelete(user: User) {
+  async function handleDelete(user: User) {
     if (user.id === currentUser?.id) return
-    db.deleteUser(user.id)
+    await api.deleteUser(user.id)
     setToDelete(null)
     load()
   }
@@ -79,6 +82,7 @@ export function AdminUsersPage() {
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -133,6 +137,7 @@ export function AdminUsersPage() {
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       {/* Edit dialog */}

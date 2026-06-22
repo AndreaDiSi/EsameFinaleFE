@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom"
+import { NavLink, useNavigate, useLocation } from "react-router-dom"
 import {
   LayoutDashboard,
   Car,
@@ -18,6 +18,8 @@ import * as React from "react"
 interface SidebarProps {
   collapsed: boolean
   onToggle: () => void
+  mobileOpen: boolean
+  onMobileClose: () => void
 }
 
 interface NavItem {
@@ -44,10 +46,16 @@ function getInitials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
 }
 
-export function Sidebar({ collapsed, onToggle }: Readonly<SidebarProps>) {
+export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Readonly<SidebarProps>) {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const isAdmin = user?.role === "admin"
+
+  React.useEffect(() => {
+    onMobileClose()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -61,8 +69,13 @@ export function Sidebar({ collapsed, onToggle }: Readonly<SidebarProps>) {
   return (
     <aside
       className={cn(
-        "relative flex h-full flex-col border-r border-border bg-sidebar transition-all duration-300",
-        collapsed ? "w-[60px]" : "w-60"
+        "flex h-full flex-col border-r border-border bg-sidebar transition-all duration-300",
+        // Mobile: fixed overlay, slides in/out
+        "fixed inset-y-0 left-0 z-40 w-72",
+        mobileOpen ? "translate-x-0 shadow-xl" : "-translate-x-full",
+        // Desktop: relative in flex layout
+        "sm:relative sm:translate-x-0 sm:shadow-none",
+        collapsed ? "sm:w-15" : "sm:w-60"
       )}
     >
       {/* Brand */}
@@ -156,7 +169,7 @@ export function Sidebar({ collapsed, onToggle }: Readonly<SidebarProps>) {
       {/* Toggle button */}
       <button
         onClick={onToggle}
-        className="absolute -right-3 top-[76px] flex size-6 items-center justify-center rounded-full border border-border bg-sidebar shadow-md hover:bg-muted transition-colors"
+        className="absolute -right-3 top-[76px] hidden sm:flex size-6 items-center justify-center rounded-full border border-border bg-sidebar shadow-md hover:bg-muted transition-colors"
         aria-label={collapsed ? "Espandi sidebar" : "Riduci sidebar"}
       >
         {collapsed ? <ChevronRight className="size-3" /> : <ChevronLeft className="size-3" />}

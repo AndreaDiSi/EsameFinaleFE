@@ -1,4 +1,4 @@
-import { Bell, Moon, Sun, LogOut, User, Plus } from "lucide-react"
+import { Bell, Moon, Sun, LogOut, User, Plus, Menu } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "@/context/AuthContext"
 import { useTheme } from "@/components/theme-provider"
@@ -30,7 +30,7 @@ function getInitials(name: string): string {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
 }
 
-export function Navbar() {
+export function Navbar({ onMenuToggle }: Readonly<{ onMenuToggle: () => void }>) {
   const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
@@ -49,6 +49,15 @@ export function Navbar() {
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4 sm:px-6">
       <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="sm:hidden"
+          onClick={onMenuToggle}
+          aria-label="Apri menu"
+        >
+          <Menu className="size-5" />
+        </Button>
         <p className="text-sm font-bold tracking-wide text-foreground hidden sm:block uppercase">{pageLabel}</p>
         <Button
           variant="default"

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 
 import { AuthProvider } from "@/context/AuthContext"
+import { CatalogProvider } from "@/context/CatalogContext"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { Layout } from "@/components/layout/Layout"
 
@@ -20,38 +21,40 @@ import { SettingsPage } from "@/pages/SettingsPage"
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+      <CatalogProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/configurator" element={<ConfigurationListPage />} />
-              <Route path="/configurator/new" element={<ConfiguratorPage />} />
-              <Route path="/configurator/:id" element={<ConfiguratorPage />} />
-              <Route path="/quotes" element={<QuotesPage />} />
-              <Route path="/quotes/:id" element={<QuoteDetailPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/configurator" element={<ConfigurationListPage />} />
+                <Route path="/configurator/new" element={<ConfiguratorPage />} />
+                <Route path="/configurator/:id" element={<ConfiguratorPage />} />
+                <Route path="/quotes" element={<QuotesPage />} />
+                <Route path="/quotes/:id" element={<QuoteDetailPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
 
-              {/* Admin only routes */}
-              <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-                <Route path="/admin" element={<AdminDashboardPage />} />
-                <Route path="/admin/users" element={<AdminUsersPage />} />
-                <Route path="/admin/quotes" element={<AdminQuotesPage />} />
-                <Route path="/admin/models" element={<AdminModelsPage />} />
+                {/* Admin only routes */}
+                <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+                  <Route path="/admin" element={<AdminDashboardPage />} />
+                  <Route path="/admin/users" element={<AdminUsersPage />} />
+                  <Route path="/admin/quotes" element={<AdminQuotesPage />} />
+                  <Route path="/admin/models" element={<AdminModelsPage />} />
+                </Route>
               </Route>
             </Route>
-          </Route>
 
-          {/* Redirect root */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Redirect root */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </CatalogProvider>
     </AuthProvider>
   )
 }

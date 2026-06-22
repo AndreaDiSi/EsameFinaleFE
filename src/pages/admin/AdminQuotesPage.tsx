@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Search, Eye, CheckCircle, XCircle, Clock, AlertCircle, SlidersHorizontal } from "lucide-react"
 
-import { db } from "@/lib/mock-data"
+import { useCatalog } from "@/context/CatalogContext"
+import { api } from "@/lib/api"
 import { formatPrice, formatDate } from "@/lib/auth"
 import { quoteAdminSchema, type QuoteAdminFormData } from "@/lib/schemas"
 import { Button } from "@/components/ui/button"
@@ -15,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import type { Quote, QuoteStatus } from "@/types"
+import type { Quote, QuoteStatus, User, Configuration } from "@/types"
 
 const STATUS_CONFIG: Record<QuoteStatus, { label: string; variant: "success" | "warning" | "destructive" | "outline"; icon: React.ReactNode }> = {
   pending: { label: "In attesa", variant: "warning", icon: <Clock className="size-3.5" /> },
@@ -24,18 +25,24 @@ const STATUS_CONFIG: Record<QuoteStatus, { label: string; variant: "success" | "
   expired: { label: "Scaduto", variant: "outline", icon: <AlertCircle className="size-3.5" /> },
 }
 
-function QuoteRow({ quote, onEdit }: Readonly<{ quote: Quote; onEdit: (q: Quote) => void }>) {
-  const config = db.getConfigurationById(quote.configurationId)
-  const user = db.getUsers().find((u) => u.id === quote.userId)
-  const model = config ? db.getModelById(config.modelId) : null
+function QuoteRow({ quote, users, configs, onEdit }: Readonly<{
+  quote: Quote
+  users: User[]
+  configs: Configuration[]
+  onEdit: (q: Quote) => void
+}>) {
+  const { getModelById } = useCatalog()
+  const config = configs.find((c) => c.id === quote.configurationId)
+  const quoteUser = users.find((u) => u.id === quote.userId)
+  const model = config ? getModelById(config.modelId) : null
   const status = STATUS_CONFIG[quote.status]
 
   return (
     <TableRow>
       <TableCell>
         <div>
-          <p className="font-medium text-sm">{user?.name ?? "—"}</p>
-          <p className="text-xs text-muted-foreground">{user?.email}</p>
+          <p className="font-medium text-sm">{quoteUser?.name ?? "—"}</p>
+          <p className="text-xs text-muted-foreground">{quoteUser?.email}</p>
         </div>
       </TableCell>
       <TableCell>
@@ -71,12 +78,17 @@ function QuoteRow({ quote, onEdit }: Readonly<{ quote: Quote; onEdit: (q: Quote)
 }
 
 export function AdminQuotesPage() {
-  const [, setQuotes] = React.useState<Quote[]>([])
+  const [quotes, setQuotes] = React.useState<Quote[]>([])
+  const [users, setUsers] = React.useState<User[]>([])
+  const [configs, setConfigs] = React.useState<Configuration[]>([])
   const [search, setSearch] = React.useState("")
   const [editingQuote, setEditingQuote] = React.useState<Quote | null>(null)
 
-  function load() {
-    setQuotes(db.getAllQuotes().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+  async function load() {
+    const [q, u, c] = await Promise.all([api.getQuotes(), api.getUsers(), api.getConfigurations()])
+    setQuotes(q.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+    setUsers(u)
+    setConfigs(c)
   }
 
   React.useEffect(() => { load() }, [])
@@ -95,13 +107,11 @@ export function AdminQuotesPage() {
     resetForm({ status: quote.status, discount: quote.discount, adminNotes: quote.adminNotes })
   }
 
-  function onSubmit(data: QuoteAdminFormData) {
+  async function onSubmit(data: QuoteAdminFormData) {
     if (!editingQuote) return
-    const finalPrice = editingQuote.totalPrice * (1 - data.discount / 100)
-    db.updateQuote(editingQuote.id, {
+    await api.updateQuote(editingQuote.id, {
       status: data.status,
       discount: data.discount,
-      finalPrice,
       adminNotes: data.adminNotes ?? "",
     })
     setEditingQuote(null)
@@ -109,35 +119,36 @@ export function AdminQuotesPage() {
   }
 
   function filterByStatus(status: QuoteStatus | "all") {
-    const all = db.getAllQuotes().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    if (status === "all") return all
-    return all.filter((q) => q.status === status)
+    if (status === "all") return quotes
+    return quotes.filter((q) => q.status === status)
   }
 
   function searchFilter(qs: Quote[]) {
     if (!search) return qs
     const s = search.toLowerCase()
     return qs.filter((q) => {
-      const user = db.getUsers().find((u) => u.id === q.userId)
-      const config = db.getConfigurationById(q.configurationId)
+      const u = users.find((u) => u.id === q.userId)
+      const c = configs.find((c) => c.id === q.configurationId)
       return (
-        user?.name.toLowerCase().includes(s) ||
-        user?.email.toLowerCase().includes(s) ||
-        config?.name.toLowerCase().includes(s)
+        u?.name.toLowerCase().includes(s) ||
+        u?.email.toLowerCase().includes(s) ||
+        c?.name.toLowerCase().includes(s)
       )
     })
   }
 
-  const allQuotes = db.getAllQuotes()
-  const pendingCount = allQuotes.filter((q) => q.status === "pending").length
-  const approvedCount = allQuotes.filter((q) => q.status === "approved").length
-  const rejectedCount = allQuotes.filter((q) => q.status === "rejected").length
+  const pendingCount = quotes.filter((q) => q.status === "pending").length
+  const approvedCount = quotes.filter((q) => q.status === "approved").length
+  const rejectedCount = quotes.filter((q) => q.status === "rejected").length
+
+  const editingConfig = editingQuote ? configs.find((c) => c.id === editingQuote.configurationId) : null
+  const editingUser = editingQuote ? users.find((u) => u.id === editingQuote.userId) : null
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-bold">Gestione preventivi</h1>
-        <p className="text-sm text-muted-foreground">{allQuotes.length} preventivi totali</p>
+        <p className="text-sm text-muted-foreground">{quotes.length} preventivi totali</p>
       </div>
 
       <div className="relative max-w-sm">
@@ -146,8 +157,8 @@ export function AdminQuotesPage() {
       </div>
 
       <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">Tutti ({allQuotes.length})</TabsTrigger>
+        <TabsList className="flex-wrap h-auto gap-1">
+          <TabsTrigger value="all">Tutti ({quotes.length})</TabsTrigger>
           <TabsTrigger value="pending">In attesa ({pendingCount})</TabsTrigger>
           <TabsTrigger value="approved">Approvati ({approvedCount})</TabsTrigger>
           <TabsTrigger value="rejected">Rifiutati ({rejectedCount})</TabsTrigger>
@@ -156,6 +167,7 @@ export function AdminQuotesPage() {
         {(["all", "pending", "approved", "rejected"] as const).map((tab) => (
           <TabsContent key={tab} value={tab} className="mt-4">
             <div className="rounded-xl border border-border overflow-hidden">
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -169,7 +181,7 @@ export function AdminQuotesPage() {
                 </TableHeader>
                 <TableBody>
                   {searchFilter(filterByStatus(tab)).map((q) => (
-                    <QuoteRow key={q.id} quote={q} onEdit={openEdit} />
+                    <QuoteRow key={q.id} quote={q} users={users} configs={configs} onEdit={openEdit} />
                   ))}
                   {searchFilter(filterByStatus(tab)).length === 0 && (
                     <TableRow>
@@ -180,6 +192,7 @@ export function AdminQuotesPage() {
                   )}
                 </TableBody>
               </Table>
+              </div>
             </div>
           </TabsContent>
         ))}
@@ -199,8 +212,8 @@ export function AdminQuotesPage() {
           </DialogHeader>
           {editingQuote && (
             <div className="rounded-lg bg-muted/50 p-3 text-sm mb-2">
-              <p className="font-medium">{db.getConfigurationById(editingQuote.configurationId)?.name ?? "—"}</p>
-              <p className="text-muted-foreground">{db.getUsers().find((u) => u.id === editingQuote.userId)?.name}</p>
+              <p className="font-medium">{editingConfig?.name ?? "—"}</p>
+              <p className="text-muted-foreground">{editingUser?.name}</p>
               <p className="font-semibold text-primary mt-1">{formatPrice(editingQuote.totalPrice)}</p>
             </div>
           )}

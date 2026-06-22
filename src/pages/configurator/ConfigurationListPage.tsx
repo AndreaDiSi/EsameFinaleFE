@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom"
 import { Plus, Car, Trash2, Edit, FileText, Search } from "lucide-react"
 
 import { useAuth } from "@/context/AuthContext"
-import { db } from "@/lib/mock-data"
+import { useCatalog } from "@/context/CatalogContext"
+import { api } from "@/lib/api"
 import { formatPrice, formatDate } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,52 +17,45 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import type { Configuration } from "@/types"
+import type { Configuration, Quote } from "@/types"
 
 export function ConfigurationListPage() {
   const { user } = useAuth()
+  const { getModelById, getMotorizationById, getOptionsByIds } = useCatalog()
   const navigate = useNavigate()
   const [configs, setConfigs] = React.useState<Configuration[]>([])
+  const [quotes, setQuotes] = React.useState<Quote[]>([])
   const [search, setSearch] = React.useState("")
   const [toDelete, setToDelete] = React.useState<string | null>(null)
 
-  function load() {
-    if (!user) return
-    setConfigs(db.getConfigurationsByUser(user.id))
+  async function load() {
+    const [c, q] = await Promise.all([api.getConfigurations(), api.getQuotes()])
+    setConfigs(c)
+    setQuotes(q)
   }
 
   React.useEffect(() => { load() }, [user])
 
-  function handleDelete(id: string) {
-    db.deleteConfiguration(id)
+  async function handleDelete(id: string) {
+    await api.deleteConfiguration(id)
     setToDelete(null)
     load()
   }
 
-  function handleRequestQuote(configId: string) {
-    const config = db.getConfigurationById(configId)
+  async function handleRequestQuote(configId: string) {
+    const config = configs.find((c) => c.id === configId)
     if (!config || !user) return
-    const existingQuote = db.getQuotesByUser(user.id).find((q) => q.configurationId === configId && q.status === "pending")
+    const existingQuote = quotes.find((q) => q.configurationId === configId && q.status === "pending")
     if (existingQuote) {
       navigate(`/quotes/${existingQuote.id}`)
       return
     }
-    const quote = db.createQuote({
-      configurationId: configId,
-      userId: user.id,
-      totalPrice: config.totalPrice,
-      discount: 0,
-      finalPrice: config.totalPrice,
-      status: "pending",
-      notes: "",
-      adminNotes: "",
-      expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-    })
+    const quote = await api.createQuote(configId)
     navigate(`/quotes/${quote.id}`)
   }
 
   const filtered = configs.filter((c) => {
-    const model = db.getModelById(c.modelId)
+    const model = getModelById(c.modelId)
     const s = search.toLowerCase()
     return (
       c.name.toLowerCase().includes(s) ||
@@ -119,11 +113,10 @@ export function ConfigurationListPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((config) => {
-            const model = db.getModelById(config.modelId)
-            const mot = db.getMotorizationById(config.motorizationId)
-            const options = db.getOptionsByIds(config.optionIds)
-            const userQuotes = user ? db.getQuotesByUser(user.id) : []
-            const hasActiveQuote = userQuotes.some(
+            const model = getModelById(config.modelId)
+            const mot = getMotorizationById(config.motorizationId)
+            const options = getOptionsByIds(config.optionIds)
+            const hasActiveQuote = quotes.some(
               (q) => q.configurationId === config.id && ["pending", "approved"].includes(q.status)
             )
 

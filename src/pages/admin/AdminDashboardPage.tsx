@@ -1,13 +1,15 @@
+import * as React from "react"
 import { useNavigate } from "react-router-dom"
 import { Users, FileText, Car, TrendingUp, Clock, CheckCircle, XCircle, ArrowRight } from "lucide-react"
 
-import { db, CAR_MODELS } from "@/lib/mock-data"
+import { useCatalog } from "@/context/CatalogContext"
+import { api } from "@/lib/api"
 import { formatPrice } from "@/lib/auth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import type { QuoteStatus } from "@/types"
+import type { Quote, Configuration, User, QuoteStatus } from "@/types"
 
 const QUOTE_STATUS: Record<QuoteStatus, { label: string; variant: "success" | "warning" | "destructive" | "outline" }> = {
   pending: { label: "In attesa", variant: "warning" },
@@ -18,27 +20,37 @@ const QUOTE_STATUS: Record<QuoteStatus, { label: string; variant: "success" | "w
 
 export function AdminDashboardPage() {
   const navigate = useNavigate()
-  const allUsers = db.getUsers()
-  const allQuotes = db.getAllQuotes()
-  const allConfigs = db.getAllConfigurations()
+  const { models } = useCatalog()
+  const [users, setUsers] = React.useState<User[]>([])
+  const [quotes, setQuotes] = React.useState<Quote[]>([])
+  const [configs, setConfigs] = React.useState<Configuration[]>([])
 
-  const totalRevenue = allQuotes
+  React.useEffect(() => {
+    Promise.all([api.getUsers(), api.getQuotes(), api.getConfigurations()]).then(([u, q, c]) => {
+      setUsers(u)
+      setQuotes(q)
+      setConfigs(c)
+    })
+  }, [])
+
+  const totalRevenue = quotes
     .filter((q) => q.status === "approved")
     .reduce((sum, q) => sum + q.finalPrice, 0)
 
-  const pendingQuotes = allQuotes.filter((q) => q.status === "pending")
-  const approvedQuotes = allQuotes.filter((q) => q.status === "approved")
-  const rejectedQuotes = allQuotes.filter((q) => q.status === "rejected")
+  const pendingQuotes = quotes.filter((q) => q.status === "pending")
+  const approvedQuotes = quotes.filter((q) => q.status === "approved")
+  const rejectedQuotes = quotes.filter((q) => q.status === "rejected")
 
-  const recentQuotes = [...allQuotes]
+  const recentQuotes = [...quotes]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
 
-  const modelCounts = allConfigs.reduce<Record<string, number>>((acc, c) => {
+  const modelCounts = configs.reduce<Record<string, number>>((acc, c) => {
     acc[c.modelId] = (acc[c.modelId] ?? 0) + 1
     return acc
   }, {})
-  const popularModels = CAR_MODELS.map((m) => ({ model: m, count: modelCounts[m.id] ?? 0 }))
+  const popularModels = models
+    .map((m) => ({ model: m, count: modelCounts[m.id] ?? 0 }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5)
   const maxCount = Math.max(...popularModels.map((m) => m.count), 1)
@@ -55,21 +67,21 @@ export function AdminDashboardPage() {
         {[
           {
             label: "Utenti totali",
-            value: allUsers.length,
+            value: users.length,
             icon: <Users className="size-5 text-blue-600 dark:text-blue-400" />,
             bg: "bg-blue-100 dark:bg-blue-900/30",
             accent: "bg-blue-500",
           },
           {
             label: "Configurazioni",
-            value: allConfigs.length,
+            value: configs.length,
             icon: <Car className="size-5 text-violet-600 dark:text-violet-400" />,
             bg: "bg-violet-100 dark:bg-violet-900/30",
             accent: "bg-violet-500",
           },
           {
             label: "Preventivi totali",
-            value: allQuotes.length,
+            value: quotes.length,
             icon: <FileText className="size-5 text-amber-600 dark:text-amber-400" />,
             bg: "bg-amber-100 dark:bg-amber-900/30",
             accent: "bg-amber-500",
@@ -119,7 +131,7 @@ export function AdminDashboardPage() {
                       <span className="text-muted-foreground">{count}</span>
                     </div>
                     <Progress
-                      value={allQuotes.length ? (count / allQuotes.length) * 100 : 0}
+                      value={quotes.length ? (count / quotes.length) * 100 : 0}
                       className={`h-1.5 ${indicatorClass}`}
                     />
                   </div>
@@ -156,6 +168,9 @@ export function AdminDashboardPage() {
                   </div>
                 </div>
               ))}
+              {popularModels.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">Nessun dato disponibile</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -171,8 +186,8 @@ export function AdminDashboardPage() {
           <CardContent>
             <div className="flex flex-col divide-y divide-border">
               {recentQuotes.map((quote) => {
-                const user = db.getUsers().find((u) => u.id === quote.userId)
-                const config = db.getConfigurationById(quote.configurationId)
+                const quoteUser = users.find((u) => u.id === quote.userId)
+                const config = configs.find((c) => c.id === quote.configurationId)
                 const status = QUOTE_STATUS[quote.status]
                 return (
                   <button
@@ -182,7 +197,7 @@ export function AdminDashboardPage() {
                     onClick={() => navigate("/admin/quotes")}
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{user?.name ?? "—"}</p>
+                      <p className="text-sm font-medium truncate">{quoteUser?.name ?? "—"}</p>
                       <p className="text-xs text-muted-foreground">{config?.name ?? "Config eliminata"}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1 ml-2 shrink-0">

@@ -6,7 +6,7 @@ import { z } from "zod"
 
 import { useAuth } from "@/context/AuthContext"
 import { useTheme } from "@/components/theme-provider"
-import { db } from "@/lib/mock-data"
+import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,6 +29,7 @@ export function SettingsPage() {
   const { user, updateCurrentUser } = useAuth()
   const { theme, setTheme } = useTheme()
   const [success, setSuccess] = React.useState(false)
+  const [serverError, setServerError] = React.useState<string | null>(null)
 
   const {
     register,
@@ -39,12 +40,17 @@ export function SettingsPage() {
     defaultValues: { name: user?.name ?? "", email: user?.email ?? "" },
   })
 
-  function onSubmit(data: ProfileFormData) {
+  async function onSubmit(data: ProfileFormData) {
     if (!user) return
-    const updated = db.updateUser(user.id, { name: data.name, email: data.email })
-    updateCurrentUser(updated)
-    setSuccess(true)
-    setTimeout(() => setSuccess(false), 3000)
+    setServerError(null)
+    try {
+      const updated = await api.updateProfile(data.name, data.email)
+      updateCurrentUser(updated)
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : "Errore nel salvataggio")
+    }
   }
 
   const themeOptions = [
@@ -88,6 +94,12 @@ export function SettingsPage() {
             <Alert variant="success" className="mb-4">
               <Check className="size-4" />
               <AlertDescription>Profilo aggiornato con successo!</AlertDescription>
+            </Alert>
+          )}
+
+          {serverError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{serverError}</AlertDescription>
             </Alert>
           )}
 

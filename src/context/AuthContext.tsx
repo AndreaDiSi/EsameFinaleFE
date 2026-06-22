@@ -1,6 +1,5 @@
 import * as React from "react"
-import { db } from "@/lib/mock-data"
-import { saveSession, clearSession, getStoredUser } from "@/lib/auth"
+import { api, storeSession, clearStoredSession, getStoredToken, getStoredUser } from "@/lib/api"
 import type { User } from "@/types"
 
 interface AuthContextValue {
@@ -10,7 +9,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string) => Promise<void>
   logout: () => void
-  updateCurrentUser: (updated: User) => Promise<void>
+  updateCurrentUser: (updated: User) => void
 }
 
 const AuthContext = React.createContext<AuthContextValue | undefined>(undefined)
@@ -20,37 +19,48 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
   const [isLoading, setIsLoading] = React.useState(true)
 
   React.useEffect(() => {
-    getStoredUser().then((stored) => {
-      if (stored) setUser(stored)
+    const token = getStoredToken()
+    if (!token) {
       setIsLoading(false)
-    })
+      return
+    }
+    // Verify token is still valid; use stored user for instant display while verifying
+    const cached = getStoredUser()
+    if (cached) setUser(cached)
+    api.me()
+      .then((fresh) => {
+        setUser(fresh)
+        // update stored user with fresh data
+        storeSession(token, fresh)
+      })
+      .catch(() => {
+        clearStoredSession()
+        setUser(null)
+      })
+      .finally(() => setIsLoading(false))
   }, [])
 
   async function login(email: string, password: string) {
-    const found = db.findUserByEmail(email)
-    if (!found || !db.validatePassword(found.id, password)) {
-      throw new Error("Credenziali non valide")
-    }
-    await saveSession(found)
-    setUser(found)
+    const { token, user: u } = await api.login(email, password)
+    storeSession(token, u)
+    setUser(u)
   }
 
   async function register(name: string, email: string, password: string) {
-    const existing = db.findUserByEmail(email)
-    if (existing) throw new Error("Email già registrata")
-    const newUser = db.createUser({ name, email, password })
-    await saveSession(newUser)
-    setUser(newUser)
+    const { token, user: u } = await api.register(name, email, password)
+    storeSession(token, u)
+    setUser(u)
   }
 
   function logout() {
-    clearSession()
+    clearStoredSession()
     setUser(null)
   }
 
-  async function updateCurrentUser(updated: User) {
+  function updateCurrentUser(updated: User) {
+    const token = getStoredToken() ?? ""
+    storeSession(token, updated)
     setUser(updated)
-    await saveSession(updated)
   }
 
   return (

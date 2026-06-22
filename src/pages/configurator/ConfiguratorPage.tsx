@@ -5,8 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Check, ChevronRight, Zap, Fuel, Gauge, Leaf, X, AlertTriangle } from "lucide-react"
 
 import { useAuth } from "@/context/AuthContext"
+import { useCatalog } from "@/context/CatalogContext"
 import { ConfiguratorProvider, useConfigurator, type ConfiguratorStep } from "@/context/ConfiguratorContext"
-import { CAR_MODELS, MOTORIZATIONS, CAR_OPTIONS, db } from "@/lib/mock-data"
+import { api } from "@/lib/api"
 import { formatPrice } from "@/lib/auth"
 import { configurationNameSchema, type ConfigurationNameFormData } from "@/lib/schemas"
 import { Button } from "@/components/ui/button"
@@ -81,6 +82,7 @@ function PriceBar() {
 
 function StepModel() {
   const { selectModel, selectedModel } = useConfigurator()
+  const { models } = useCatalog()
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -88,7 +90,7 @@ function StepModel() {
         <p className="text-sm text-muted-foreground mt-0.5">Seleziona il modello di automobile che vuoi configurare</p>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {CAR_MODELS.map((model) => (
+        {models.map((model) => (
           <ModelCard
             key={model.id}
             model={model}
@@ -158,7 +160,8 @@ const FUEL_LABELS: Record<string, string> = {
 
 function StepMotorization() {
   const { selectedModel, selectedMotorization, selectMotorization } = useConfigurator()
-  const motorizations = MOTORIZATIONS.filter((m) => m.modelId === selectedModel?.id)
+  const { getMotorizationsByModel } = useCatalog()
+  const motorizations = selectedModel ? getMotorizationsByModel(selectedModel.id) : []
 
   return (
     <div className="flex flex-col gap-5">
@@ -357,6 +360,7 @@ function OptionCard({ option, selected, compatible, onToggle }: Readonly<{
 
 function StepSummary({ onSave }: Readonly<{ onSave: () => void }>) {
   const { selectedModel, selectedMotorization, selectedOptionIds, configName, setConfigName, totalPrice, editingConfigId } = useConfigurator()
+  const { getOptionsByIds } = useCatalog()
   const { register, handleSubmit, formState: { errors } } = useForm<ConfigurationNameFormData>({
     resolver: zodResolver(configurationNameSchema),
     defaultValues: { name: configName },
@@ -367,7 +371,7 @@ function StepSummary({ onSave }: Readonly<{ onSave: () => void }>) {
     onSave()
   }
 
-  const selectedOptions = CAR_OPTIONS.filter((o) => selectedOptionIds.includes(o.id))
+  const selectedOptions = getOptionsByIds(selectedOptionIds)
   const optionsByCategory = selectedOptions.reduce<Record<string, CarOption[]>>((acc, opt) => {
     if (!acc[opt.category]) acc[opt.category] = []
     acc[opt.category].push(opt)
@@ -532,8 +536,7 @@ function ConfiguratorInnerWithLoad({ id }: Readonly<{ id?: string }>) {
   React.useEffect(() => {
     if (id && id !== "new" && !loaded.current) {
       loaded.current = true
-      loadConfiguration(id)
-      setStep(1)
+      loadConfiguration(id).then(() => setStep(1))
     }
   }, [id, loadConfiguration, setStep])
 
@@ -549,35 +552,38 @@ function InnerWizard() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [saved, setSaved] = React.useState(false)
+  const [saveError, setSaveError] = React.useState<string | null>(null)
 
   const canGoNext =
     (ctx.step === 1 && !!ctx.selectedModel) ||
     (ctx.step === 2 && !!ctx.selectedMotorization) ||
     ctx.step === 3
 
-  function handleSave() {
+  async function handleSave() {
     if (!user || !ctx.selectedModel || !ctx.selectedMotorization || !ctx.configName) return
-    if (ctx.editingConfigId) {
-      db.updateConfiguration(ctx.editingConfigId, {
-        name: ctx.configName,
-        modelId: ctx.selectedModel.id,
-        motorizationId: ctx.selectedMotorization.id,
-        optionIds: ctx.selectedOptionIds,
-        totalPrice: ctx.totalPrice,
-      })
-    } else {
-      db.createConfiguration({
-        userId: user.id,
-        name: ctx.configName,
-        modelId: ctx.selectedModel.id,
-        motorizationId: ctx.selectedMotorization.id,
-        optionIds: ctx.selectedOptionIds,
-        totalPrice: ctx.totalPrice,
-      })
+    setSaveError(null)
+    try {
+      if (ctx.editingConfigId) {
+        await api.updateConfiguration(ctx.editingConfigId, {
+          name: ctx.configName,
+          modelId: ctx.selectedModel.id,
+          motorizationId: ctx.selectedMotorization.id,
+          optionIds: ctx.selectedOptionIds,
+        })
+      } else {
+        await api.createConfiguration({
+          name: ctx.configName,
+          modelId: ctx.selectedModel.id,
+          motorizationId: ctx.selectedMotorization.id,
+          optionIds: ctx.selectedOptionIds,
+        })
+      }
+      setSaved(true)
+      ctx.reset()
+      setTimeout(() => navigate("/configurator"), 1200)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio")
     }
-    setSaved(true)
-    ctx.reset()
-    setTimeout(() => navigate("/configurator"), 1200)
   }
 
   return (
@@ -601,6 +607,12 @@ function InnerWizard() {
         <Alert variant="success">
           <Check className="size-4" />
           <AlertDescription>Configurazione salvata! Reindirizzamento in corso…</AlertDescription>
+        </Alert>
+      )}
+
+      {saveError && (
+        <Alert variant="destructive">
+          <AlertDescription>{saveError}</AlertDescription>
         </Alert>
       )}
 

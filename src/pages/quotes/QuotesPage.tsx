@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom"
 import { FileText, Eye, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react"
 
 import { useAuth } from "@/context/AuthContext"
-import { db } from "@/lib/mock-data"
+import { useCatalog } from "@/context/CatalogContext"
+import { api } from "@/lib/api"
 import { formatPrice, formatDate } from "@/lib/auth"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import type { Quote, QuoteStatus } from "@/types"
+import type { Quote, QuoteStatus, Configuration } from "@/types"
 
 const STATUS_CONFIG: Record<QuoteStatus, { label: string; variant: "success" | "warning" | "destructive" | "outline" | "info"; icon: React.ReactNode }> = {
   pending: { label: "In attesa", variant: "warning", icon: <Clock className="size-3.5" /> },
@@ -18,11 +19,12 @@ const STATUS_CONFIG: Record<QuoteStatus, { label: string; variant: "success" | "
   expired: { label: "Scaduto", variant: "outline", icon: <AlertCircle className="size-3.5" /> },
 }
 
-function QuoteCard({ quote }: Readonly<{ quote: Quote }>) {
+function QuoteCard({ quote, configs }: Readonly<{ quote: Quote; configs: Configuration[] }>) {
   const navigate = useNavigate()
-  const config = db.getConfigurationById(quote.configurationId)
-  const model = config ? db.getModelById(config.modelId) : null
-  const mot = config ? db.getMotorizationById(config.motorizationId) : null
+  const { getModelById, getMotorizationById } = useCatalog()
+  const config = configs.find((c) => c.id === quote.configurationId) ?? null
+  const model = config ? getModelById(config.modelId) : null
+  const mot = config ? getMotorizationById(config.motorizationId) : null
   const status = STATUS_CONFIG[quote.status]
 
   return (
@@ -102,10 +104,14 @@ function EmptyState() {
 export function QuotesPage() {
   const { user } = useAuth()
   const [quotes, setQuotes] = React.useState<Quote[]>([])
+  const [configs, setConfigs] = React.useState<Configuration[]>([])
 
   React.useEffect(() => {
     if (!user) return
-    setQuotes(db.getQuotesByUser(user.id).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+    Promise.all([api.getQuotes(), api.getConfigurations()]).then(([q, c]) => {
+      setQuotes(q.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+      setConfigs(c)
+    })
   }, [user])
 
   const pending = quotes.filter((q) => q.status === "pending")
@@ -120,7 +126,7 @@ export function QuotesPage() {
       </div>
 
       <Tabs defaultValue="all">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="all">Tutti ({quotes.length})</TabsTrigger>
           <TabsTrigger value="pending">In attesa ({pending.length})</TabsTrigger>
           <TabsTrigger value="approved">Approvati ({approved.length})</TabsTrigger>
@@ -130,28 +136,28 @@ export function QuotesPage() {
         <TabsContent value="all" className="mt-5">
           {quotes.length === 0 ? <EmptyState /> : (
             <div className="flex flex-col gap-3">
-              {quotes.map((q) => <QuoteCard key={q.id} quote={q} />)}
+              {quotes.map((q) => <QuoteCard key={q.id} quote={q} configs={configs} />)}
             </div>
           )}
         </TabsContent>
         <TabsContent value="pending" className="mt-5">
           {pending.length === 0 ? <EmptyState /> : (
             <div className="flex flex-col gap-3">
-              {pending.map((q) => <QuoteCard key={q.id} quote={q} />)}
+              {pending.map((q) => <QuoteCard key={q.id} quote={q} configs={configs} />)}
             </div>
           )}
         </TabsContent>
         <TabsContent value="approved" className="mt-5">
           {approved.length === 0 ? <EmptyState /> : (
             <div className="flex flex-col gap-3">
-              {approved.map((q) => <QuoteCard key={q.id} quote={q} />)}
+              {approved.map((q) => <QuoteCard key={q.id} quote={q} configs={configs} />)}
             </div>
           )}
         </TabsContent>
         <TabsContent value="other" className="mt-5">
           {rejected.length === 0 ? <EmptyState /> : (
             <div className="flex flex-col gap-3">
-              {rejected.map((q) => <QuoteCard key={q.id} quote={q} />)}
+              {rejected.map((q) => <QuoteCard key={q.id} quote={q} configs={configs} />)}
             </div>
           )}
         </TabsContent>

@@ -3,7 +3,8 @@ import { Car, FileText, Plus, ArrowRight, Wrench, Settings, TrendingUp, Clock } 
 import * as React from "react"
 
 import { useAuth } from "@/context/AuthContext"
-import { db } from "@/lib/mock-data"
+import { useCatalog } from "@/context/CatalogContext"
+import { api } from "@/lib/api"
 import { formatPrice, formatDate } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -49,20 +50,26 @@ const SERVICES = [
 
 export function DashboardPage() {
   const { user } = useAuth()
+  const { getModelById, getMotorizationById } = useCatalog()
   const navigate = useNavigate()
   const [configs, setConfigs] = React.useState<Configuration[]>([])
   const [quotes, setQuotes] = React.useState<Quote[]>([])
 
   React.useEffect(() => {
     if (!user) return
-    setConfigs(db.getConfigurationsByUser(user.id).slice(0, 3))
-    setQuotes(db.getQuotesByUser(user.id).slice(0, 3))
+    Promise.all([api.getConfigurations(), api.getQuotes()]).then(([c, q]) => {
+      setConfigs(c)
+      setQuotes(q)
+    })
   }, [user])
 
-  const totalConfigs = db.getConfigurationsByUser(user?.id ?? "").length
-  const totalQuotes = db.getQuotesByUser(user?.id ?? "").length
-  const pendingQuotes = db.getQuotesByUser(user?.id ?? "").filter((q) => q.status === "pending").length
-  const approvedQuotes = db.getQuotesByUser(user?.id ?? "").filter((q) => q.status === "approved").length
+  const totalConfigs = configs.length
+  const totalQuotes = quotes.length
+  const pendingQuotes = quotes.filter((q) => q.status === "pending").length
+  const approvedQuotes = quotes.filter((q) => q.status === "approved").length
+
+  const recentConfigs = configs.slice(0, 3)
+  const recentQuotes = quotes.slice(0, 3)
 
   return (
     <div className="flex flex-col gap-6">
@@ -98,12 +105,12 @@ export function DashboardPage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 p-8 md:p-10 flex flex-col gap-6 max-w-[520px]">
+        <div className="relative z-10 p-5 sm:p-8 md:p-10 flex flex-col gap-4 sm:gap-6 max-w-130">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary mb-3">
               Piattaforma Configurazione
             </p>
-            <h1 className="text-5xl font-black leading-[0.95] tracking-tight">
+            <h1 className="text-3xl sm:text-5xl font-black leading-[0.95] tracking-tight">
               <span className="text-foreground">Car</span>
               <br />
               <span className="text-primary">Tuning</span>
@@ -124,7 +131,7 @@ export function DashboardPage() {
           </Button>
 
           {/* Stats bar */}
-          <div className="flex items-center gap-6 pt-2 border-t border-border">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-2 border-t border-border">
             <div>
               <p className="text-2xl font-black text-primary leading-none">{totalConfigs}</p>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mt-1">
@@ -202,7 +209,7 @@ export function DashboardPage() {
             </button>
           </div>
           <div className="p-2">
-            {configs.length === 0 ? (
+            {recentConfigs.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-10 text-center">
                 <div className="flex size-14 items-center justify-center rounded-xl bg-muted">
                   <Car className="size-7 text-muted-foreground/40" />
@@ -216,9 +223,9 @@ export function DashboardPage() {
                 </Button>
               </div>
             ) : (
-              configs.map((config) => {
-                const model = db.getModelById(config.modelId)
-                const mot = db.getMotorizationById(config.motorizationId)
+              recentConfigs.map((config) => {
+                const model = getModelById(config.modelId)
+                const mot = getMotorizationById(config.motorizationId)
                 return (
                   <button
                     key={config.id}
@@ -264,7 +271,7 @@ export function DashboardPage() {
             </button>
           </div>
           <div className="p-2">
-            {quotes.length === 0 ? (
+            {recentQuotes.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-10 text-center">
                 <div className="flex size-14 items-center justify-center rounded-xl bg-muted">
                   <FileText className="size-7 text-muted-foreground/40" />
@@ -278,9 +285,9 @@ export function DashboardPage() {
                 </Button>
               </div>
             ) : (
-              quotes.map((quote) => {
-                const config = db.getConfigurationById(quote.configurationId)
-                const model = config ? db.getModelById(config.modelId) : null
+              recentQuotes.map((quote) => {
+                const config = configs.find((c) => c.id === quote.configurationId)
+                const model = config ? getModelById(config.modelId) : null
                 const status = QUOTE_STATUS_MAP[quote.status]
                 return (
                   <button
@@ -306,17 +313,17 @@ export function DashboardPage() {
       </div>
 
       {/* ── QUICK STATS ROW ───────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {[
-          { label: "Configurazioni", value: totalConfigs, icon: <Car className="size-5" />, color: "text-primary" },
-          { label: "In attesa", value: pendingQuotes, icon: <Clock className="size-5" />, color: "text-amber-400" },
-          { label: "Approvati", value: approvedQuotes, icon: <TrendingUp className="size-5" />, color: "text-emerald-400" },
+          { label: "Configurazioni", value: totalConfigs, icon: <Car className="size-4 sm:size-5" />, color: "text-primary" },
+          { label: "In attesa", value: pendingQuotes, icon: <Clock className="size-4 sm:size-5" />, color: "text-amber-400" },
+          { label: "Approvati", value: approvedQuotes, icon: <TrendingUp className="size-4 sm:size-5" />, color: "text-emerald-400" },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} className="rounded-xl bg-card border border-border p-4 flex items-center gap-4">
-            <div className={`${color} opacity-80`}>{icon}</div>
-            <div>
-              <p className={`text-2xl font-black leading-none ${color}`}>{value}</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mt-1">{label}</p>
+          <div key={label} className="rounded-xl bg-card border border-border p-3 sm:p-4 flex items-center gap-2 sm:gap-4">
+            <div className={`${color} opacity-80 shrink-0`}>{icon}</div>
+            <div className="min-w-0">
+              <p className={`text-xl sm:text-2xl font-black leading-none ${color}`}>{value}</p>
+              <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mt-1 truncate">{label}</p>
             </div>
           </div>
         ))}

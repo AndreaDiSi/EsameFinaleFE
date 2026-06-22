@@ -2,14 +2,15 @@ import * as React from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ArrowLeft, Car, CheckCircle, XCircle, Clock, AlertCircle, Download, Send } from "lucide-react"
 
-import { db } from "@/lib/mock-data"
+import { useCatalog } from "@/context/CatalogContext"
+import { api } from "@/lib/api"
 import { formatPrice, formatDate } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import type { Quote, QuoteStatus } from "@/types"
+import type { Quote, QuoteStatus, Configuration } from "@/types"
 
 const STATUS_CONFIG: Record<QuoteStatus, { label: string; variant: "success" | "warning" | "destructive" | "outline"; icon: React.ReactNode; description: string }> = {
   pending: { label: "In attesa di risposta", variant: "warning", icon: <Clock className="size-4" />, description: "Il tuo preventivo è in fase di revisione. Ti risponderemo al più presto." },
@@ -21,12 +22,30 @@ const STATUS_CONFIG: Record<QuoteStatus, { label: string; variant: "success" | "
 export function QuoteDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { getModelById, getMotorizationById, getOptionsByIds } = useCatalog()
   const [quote, setQuote] = React.useState<Quote | null>(null)
+  const [config, setConfig] = React.useState<Configuration | null>(null)
+  const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
     if (!id) return
-    setQuote(db.getQuoteById(id))
+    api.getQuote(id)
+      .then(async (q) => {
+        setQuote(q)
+        const c = await api.getConfiguration(q.configurationId).catch(() => null)
+        setConfig(c)
+      })
+      .catch(() => setQuote(null))
+      .finally(() => setLoading(false))
   }, [id])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-sm text-muted-foreground">Caricamento…</p>
+      </div>
+    )
+  }
 
   if (!quote) {
     return (
@@ -43,24 +62,20 @@ export function QuoteDetailPage() {
     )
   }
 
-  const config = db.getConfigurationById(quote.configurationId)
-  const model = config ? db.getModelById(config.modelId) : null
-  const mot = config ? db.getMotorizationById(config.motorizationId) : null
-  const options = config ? db.getOptionsByIds(config.optionIds) : []
+  const model = config ? getModelById(config.modelId) : null
+  const mot = config ? getMotorizationById(config.motorizationId) : null
+  const options = config ? getOptionsByIds(config.optionIds) : []
   const status = STATUS_CONFIG[quote.status]
+
   let alertVariant: "success" | "destructive" | "default"
-  if (quote.status === "approved") {
-    alertVariant = "success"
-  } else if (quote.status === "rejected") {
-    alertVariant = "destructive"
-  } else {
-    alertVariant = "default"
-  }
+  if (quote.status === "approved") alertVariant = "success"
+  else if (quote.status === "rejected") alertVariant = "destructive"
+  else alertVariant = "default"
 
   function handleExport() {
     if (!quote) return
     const lines = [
-      `PREVENTIVO #${quote.id.toUpperCase()}`,
+      `PREVENTIVO #${quote.id.slice(0, 8).toUpperCase()}`,
       `Data: ${formatDate(quote.createdAt)}`,
       `Scade: ${formatDate(quote.expiresAt)}`,
       `Stato: ${status.label}`,
@@ -85,7 +100,7 @@ export function QuoteDetailPage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `preventivo-${quote.id}.txt`
+    a.download = `preventivo-${quote.id.slice(0, 8)}.txt`
     a.click()
     URL.revokeObjectURL(url)
   }
