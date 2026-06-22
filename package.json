@@ -30,7 +30,9 @@
     "zod": "^4.4.3"
   },
   "overrides": {
-    "js-yaml": "^4.2.0"
+    "js-yaml": "^4.2.0",
+    "hono": "^4.12.25",
+    "postcss-selector-parser": "^7.1.2"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",
