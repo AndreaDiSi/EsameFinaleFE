@@ -24,7 +24,7 @@ function encodeSegment(obj: object): string {
 function decodeSegment(seg: string): unknown {
   const binary = atob(seg.replaceAll("-", "+").replaceAll("_", "/"))
   const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.codePointAt(i) ?? 0
   return JSON.parse(new TextDecoder().decode(bytes))
 }
 
@@ -51,7 +51,7 @@ export async function verifyJWT(token: string): Promise<User | null> {
     if (parts.length !== 3) return null
     const [header, payload, sig] = parts
     const key = await getKey()
-    const sigBytes = Uint8Array.from(atob(sig.replaceAll("-", "+").replaceAll("_", "/")), (c) => c.charCodeAt(0))
+    const sigBytes = Uint8Array.from(atob(sig.replaceAll("-", "+").replaceAll("_", "/")), (c) => c.codePointAt(0) ?? 0)
     const valid = await crypto.subtle.verify("HMAC", key, sigBytes, new TextEncoder().encode(`${header}.${payload}`))
     if (!valid) return null
     const claims = decodeSegment(payload) as { sub: string; name: string; email: string; role: User["role"]; createdAt: string; exp: number }
