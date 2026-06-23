@@ -16,6 +16,7 @@ import { AdminDashboardPage } from "@/pages/admin/AdminDashboardPage"
 import { AdminUsersPage } from "@/pages/admin/AdminUsersPage"
 import { AdminQuotesPage } from "@/pages/admin/AdminQuotesPage"
 import { AdminModelsPage } from "@/pages/admin/AdminModelsPage"
+import { AdminOptionsPage } from "@/pages/admin/AdminOptionsPage"
 import { SettingsPage } from "@/pages/SettingsPage"
 
 export default function App() {
@@ -45,6 +46,7 @@ export default function App() {
                   <Route path="/admin/users" element={<AdminUsersPage />} />
                   <Route path="/admin/quotes" element={<AdminQuotesPage />} />
                   <Route path="/admin/models" element={<AdminModelsPage />} />
+                  <Route path="/admin/options" element={<AdminOptionsPage />} />
                 </Route>
               </Route>
             </Route>

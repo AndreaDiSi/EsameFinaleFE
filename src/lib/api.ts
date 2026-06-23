@@ -330,4 +330,70 @@ export const api = {
   }> {
     return request("/admin/stats")
   },
+
+  // ── Admin Catalog — Models ────────────────────────────────────────────────
+
+  async createModel(data: { name: string; brand: string; category: string; basePrice: number; description: string; imageColor: string }): Promise<CarModel> {
+    const res = await request<CarModelApi>("/catalog/models", {
+      method: "POST",
+      body: JSON.stringify({ ...data, category: data.category.charAt(0).toUpperCase() + data.category.slice(1) }),
+    })
+    return mapModel(res)
+  },
+
+  async updateModel(id: string, data: { name: string; brand: string; category: string; basePrice: number; description: string; imageColor: string }): Promise<CarModel> {
+    const res = await request<CarModelApi>(`/catalog/models/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ ...data, category: data.category.charAt(0).toUpperCase() + data.category.slice(1) }),
+    })
+    return mapModel(res)
+  },
+
+  async deleteModel(id: string): Promise<void> {
+    await request<void>(`/catalog/models/${id}`, { method: "DELETE" })
+  },
+
+  // ── Admin Catalog — Motorizations ─────────────────────────────────────────
+
+  async createMotorization(modelId: string, data: { name: string; fuelType: string; power: number; torque: number; acceleration: number; consumption: string; price: number }): Promise<Motorization> {
+    const res = await request<MotorizationApi>(`/catalog/models/${modelId}/motorizations`, {
+      method: "POST",
+      body: JSON.stringify({ ...data, fuelType: data.fuelType.charAt(0).toUpperCase() + data.fuelType.slice(1) }),
+    })
+    return mapMotorization(res)
+  },
+
+  async updateMotorization(modelId: string, id: string, data: { name: string; fuelType: string; power: number; torque: number; acceleration: number; consumption: string; price: number }): Promise<Motorization> {
+    const res = await request<MotorizationApi>(`/catalog/models/${modelId}/motorizations/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ ...data, fuelType: data.fuelType.charAt(0).toUpperCase() + data.fuelType.slice(1) }),
+    })
+    return mapMotorization(res)
+  },
+
+  async deleteMotorization(modelId: string, id: string): Promise<void> {
+    await request<void>(`/catalog/models/${modelId}/motorizations/${id}`, { method: "DELETE" })
+  },
+
+  // ── Admin Catalog — Options ───────────────────────────────────────────────
+
+  async createOption(data: { name: string; description: string; category: string; price: number; color?: string; incompatibleWith: string[]; requiredMotorizationIds: string[] }): Promise<CarOption> {
+    const res = await request<CarOptionApi>("/catalog/options", {
+      method: "POST",
+      body: JSON.stringify({ ...data, category: data.category.charAt(0).toUpperCase() + data.category.slice(1) }),
+    })
+    return mapOption(res)
+  },
+
+  async updateOption(id: string, data: { name: string; description: string; category: string; price: number; color?: string; incompatibleWith: string[]; requiredMotorizationIds: string[] }): Promise<CarOption> {
+    const res = await request<CarOptionApi>(`/catalog/options/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ ...data, category: data.category.charAt(0).toUpperCase() + data.category.slice(1) }),
+    })
+    return mapOption(res)
+  },
+
+  async deleteOption(id: string): Promise<void> {
+    await request<void>(`/catalog/options/${id}`, { method: "DELETE" })
+  },
 }

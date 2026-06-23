@@ -77,5 +77,18 @@ export type ConfigurationNameFormData = z.infer<typeof configurationNameSchema>
 export type QuoteRequestFormData = z.infer<typeof quoteRequestSchema>
 export type QuoteAdminFormData = z.infer<typeof quoteAdminSchema>
 export type UserEditFormData = z.infer<typeof userEditSchema>
+export const createCarOptionSchema = z.object({
+  name: z.string().min(2, "Il nome deve essere di almeno 2 caratteri"),
+  description: z.string().min(1, "La descrizione è obbligatoria"),
+  category: z.enum(["color", "interior", "technology", "safety", "comfort"], {
+    errorMap: () => ({ message: "Seleziona una categoria valida" }),
+  }),
+  price: z.number({ required_error: "Il prezzo è obbligatorio" }).min(0, "Il prezzo deve essere positivo"),
+  color: z.string().optional(),
+  incompatibleWith: z.array(z.string()).default([]),
+  requiredMotorizationIds: z.array(z.string()).default([]),
+})
+
 export type CreateCarModelFormData = z.infer<typeof createCarModelSchema>
 export type CreateMotorizationFormData = z.infer<typeof createMotorizationSchema>
+export type CreateCarOptionFormData = z.infer<typeof createCarOptionSchema>

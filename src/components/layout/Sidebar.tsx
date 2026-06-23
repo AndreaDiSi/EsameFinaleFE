@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Wrench,
   Shield,
+  Package,
 } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
 import { cn } from "@/lib/utils"
@@ -40,6 +41,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: "/admin/quotes", icon: <FileText className="size-4.5" />, label: "Preventivi" },
   { to: "/admin/users", icon: <Users className="size-4.5" />, label: "Utenti" },
   { to: "/admin/models", icon: <Wrench className="size-4.5" />, label: "Modelli Auto" },
+  { to: "/admin/options", icon: <Package className="size-4.5" />, label: "Optional" },
 ]
 
 function getInitials(name: string) {
